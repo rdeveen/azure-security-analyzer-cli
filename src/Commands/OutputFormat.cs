@@ -1,0 +1,11 @@
+namespace AzureSecurityAnalyzer.Commands;
+
+public enum OutputFormat
+{
+    Console,
+    Json,
+    Markdown,
+    Text,
+    Jsonc,
+    Csv
+}
