@@ -60,10 +60,16 @@ jobs:
           src/nupkgs/*.nupkg
           src/publish/win-x64/*.exe
           src/publish/win-arm64/*.exe
-
-    # - name: Push NuGet Package
-    #   run: |
-    #     dotnet nuget push nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+ 
+    - name: NuGet login (OIDC → temp API key)
+      uses: NuGet/login@v1
+      id: login
+      with:
+        user: rdeveen
+    
+    - name: Push NuGet Package
+      run: |
+        dotnet nuget push nupkgs/*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
 
     - name: Create GitHub Release
       id: create_release
