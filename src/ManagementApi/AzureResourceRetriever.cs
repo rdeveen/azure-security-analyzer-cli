@@ -11,15 +11,20 @@ namespace AzureSecurityAnalyzer.ManagementApi;
 
 public interface IAzureResourceRetriever
 {
+    string ManagementApiAddress { get; set; }
+    TimeSpan HttpTimeout { get; set; }
+
     Task<Subscription> RetrieveSubscription(bool includeDebugOutput, Guid subscriptionId);
+    Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId);
 }
 
 public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetriever
 {
-    private readonly HttpClient _httpClient = httpClient;
-    private bool _tokenRetrieved;
-    public string ManagementApiAddress { get; set; }
+    private readonly HttpClient httpClient = httpClient;
+    private bool tokenRetrieved;
+    public required string ManagementApiAddress { get; set; }
     public TimeSpan HttpTimeout { get; set; } = TimeSpan.FromSeconds(100); // same as the .net core default
+    private readonly JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true };
 
     public async Task<Subscription> RetrieveSubscription(bool includeDebugOutput, Guid subscriptionId)
     {
@@ -31,13 +36,50 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
 
         if (includeDebugOutput)
         {
-            var json = JsonSerializer.Serialize(content, new JsonSerializerOptions { WriteIndented = true });
+            var json = JsonSerializer.Serialize(content, jsonSerializerOptions);
             AnsiConsole.WriteLine("Retrieved subscription details:");
             AnsiConsole.Write(new JsonText(json));
             AnsiConsole.WriteLine();
         }
 
         return content;
+    }
+
+    public async Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId)
+    {
+        var networkSecurityGroups = new List<NetworkSecurityGroup>();
+
+        var uri = new Uri(
+            $"/subscriptions/{subscriptionId}/providers/Microsoft.Network/networkSecurityGroups?api-version=2024-05-01",
+            UriKind.Relative);
+
+        while (true)
+        {
+            var content = await ExecuteTypedCallToManagementApi<NetworkSecurityGroupListResult>(includeDebugOutput, null, uri);
+
+            if (content?.value is { Length: > 0 })
+            {
+                networkSecurityGroups.AddRange(content.value);
+            }
+
+            // Follow the nextLink for paged results
+            if (string.IsNullOrEmpty(content?.nextLink))
+            {
+                break;
+            }
+
+            uri = new Uri(content.nextLink, UriKind.Absolute);
+        }
+
+        if (includeDebugOutput)
+        {
+            var json = JsonSerializer.Serialize(networkSecurityGroups, jsonSerializerOptions);
+            AnsiConsole.WriteLine($"Retrieved {networkSecurityGroups.Count} network security groups:");
+            AnsiConsole.Write(new JsonText(json));
+            AnsiConsole.WriteLine();
+        }
+
+        return networkSecurityGroups;
     }
 
     private async Task<T?> ExecuteTypedCallToManagementApi<T>(bool includeDebugOutput, object? payload, Uri uri)
@@ -56,18 +98,18 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         if (includeDebugOutput)
         {
             AnsiConsole.WriteLine($"Retrieving data from {uri} using the following payload:");
-            AnsiConsole.Write(new JsonText(JsonSerializer.Serialize(payload)));
+            AnsiConsole.Write(new JsonText(JsonSerializer.Serialize(payload, jsonSerializerOptions)));
             AnsiConsole.WriteLine();
         }
 
-        if (!string.Equals(_httpClient.BaseAddress?.ToString(), ManagementApiAddress))
+        if (!string.Equals(httpClient.BaseAddress?.ToString(), ManagementApiAddress))
         {
-            _httpClient.BaseAddress = new Uri(ManagementApiAddress);
+            httpClient.BaseAddress = new Uri(ManagementApiAddress);
         }
 
-        if (_httpClient.Timeout != HttpTimeout)
+        if (httpClient.Timeout != HttpTimeout)
         {
-            _httpClient.Timeout = HttpTimeout;
+            httpClient.Timeout = HttpTimeout;
         }
 
         var options = new JsonSerializerOptions
@@ -77,8 +119,8 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         };
 
         var response = payload == null
-            ? await _httpClient.GetAsync(uri)
-            : await _httpClient.PostAsJsonAsync(uri, payload, options);
+            ? await httpClient.GetAsync(uri)
+            : await httpClient.PostAsJsonAsync(uri, payload, options);
 
         if (includeDebugOutput)
         {
@@ -96,7 +138,7 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
 
     private async Task RetrieveToken(bool includeDebugOutput)
     {
-        if (_tokenRetrieved)
+        if (tokenRetrieved)
             return;
 
         // Get the token by using the DefaultAzureCredential, but try the AzureCliCredential first
@@ -114,9 +156,9 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
             AnsiConsole.WriteLine($"Token retrieved and expires at: {token.ExpiresOn}");
 
         // Set as the bearer token for the HTTP client
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
 
-        _tokenRetrieved = true;
+        tokenRetrieved = true;
     }
 }
 
@@ -129,3 +171,55 @@ public record Subscription(
     string displayName,
     string state
 );
+
+public record NetworkSecurityGroupListResult(
+    NetworkSecurityGroup[] value,
+    string? nextLink
+);
+
+public record NetworkSecurityGroup(
+    string id,
+    string name,
+    string type,
+    string location,
+    string? etag,
+    Dictionary<string, string>? tags,
+    NetworkSecurityGroupProperties properties
+);
+
+public record NetworkSecurityGroupProperties(
+    string provisioningState,
+    string resourceGuid,
+    SecurityRule[]? securityRules,
+    SecurityRule[]? defaultSecurityRules,
+    ResourceReference[]? networkInterfaces,
+    ResourceReference[]? subnets,
+    bool? flushConnection
+);
+
+public record SecurityRule(
+    string id,
+    string name,
+    string? etag,
+    string? type,
+    SecurityRuleProperties properties
+);
+
+public record SecurityRuleProperties(
+    string? provisioningState,
+    string? description,
+    string protocol,
+    string? sourcePortRange,
+    string? destinationPortRange,
+    string? sourceAddressPrefix,
+    string? destinationAddressPrefix,
+    string access,
+    int priority,
+    string direction,
+    string[]? sourcePortRanges,
+    string[]? destinationPortRanges,
+    string[]? sourceAddressPrefixes,
+    string[]? destinationAddressPrefixes
+);
+
+public record ResourceReference(string id);

@@ -5,5 +5,5 @@ Azure Security Analyzer CLI
 ## Usage
 
 ```bash
-azure-security-analyzer-cli --help
+azure-security-analyzer --help
 ```

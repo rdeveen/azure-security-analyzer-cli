@@ -9,8 +9,8 @@ public static class OutputFormatterFactory
         return new Dictionary<OutputFormat, BaseOutputFormatter>
         {
             { OutputFormat.Console, new ConsoleOutputFormatter() },
-            // { OutputFormat.Json, new JsonOutputFormatter() },
-            // { OutputFormat.Jsonc, new JsonOutputFormatter() },
+            { OutputFormat.Json, new JsonOutputFormatter() },
+            { OutputFormat.Jsonc, new JsonOutputFormatter() },
             // { OutputFormat.Text, new TextOutputFormatter() },
             { OutputFormat.Markdown, new MarkdownOutputFormatter() },
             // { OutputFormat.Csv, new CsvOutputFormatter() }

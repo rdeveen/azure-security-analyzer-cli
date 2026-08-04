@@ -67,6 +67,11 @@ app.Configure(config =>
     config.AddCommand<AzureSecurityAnalyzer.Commands.Regions.Command>("regions")
        .WithDescription("Get the available Azure regions.");
 
+    config.AddExample(["nsg"]);
+
+    config.AddCommand<AzureSecurityAnalyzer.Commands.NetworkSecurityGroups.Command>("nsg")
+       .WithDescription("Get the network security groups in the subscription.");
+
     //         .WithDescription("Show the accumulated cost details.");
     //     config.AddExample(new[] { "accumulatedCost", "-o", "json" });
     //     config.AddExample(new[] { "costByResource", "-s", "00000000-0000-0000-0000-000000000000", "-o", "text" });

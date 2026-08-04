@@ -72,9 +72,9 @@ public class CostSettings : LogCommandSettings, ICostSettings
     [Description("The base address for the Cost API. Defaults to https://management.azure.com/")]
     public string CostApiAddress { get; set; } = "https://management.azure.com/";
 
-    [CommandOption("--priceApiBaseAddress <BASE_ADDRESS>")]
-    [Description("The base address for the Price API. Defaults to https://prices.azure.com/")]
-    public string PriceApiAddress { get; set; } = "https://prices.azure.com/";
+    [CommandOption("--managementApiAddress <BASE_ADDRESS>")]
+    [Description("The base address for the Management API. Defaults to https://management.azure.com/")]
+    public string ManagementApiAddress { get; set; } = "https://management.azure.com/";
 
     [CommandOption("--httpTimeout <TIMEOUT>")]
     [Description("Allows overriding the default HTTP timeout in seconds. Defaults to 100 seconds.")]
