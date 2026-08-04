@@ -13,7 +13,8 @@ env:
 permissions:
   contents: write
   discussions: write
-
+  id-token: write # Needed for OIDC authentication to NuGet.org
+ 
 jobs:
   build-pack-release:
     runs-on: ubuntu-latest
