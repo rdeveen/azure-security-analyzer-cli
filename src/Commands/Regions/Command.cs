@@ -14,11 +14,15 @@ public class Command(IRegionsRetriever regionsRetriever) : AsyncCommand<Regions.
     {
         CommandHelpers.PrintVersionIfDebug(settings.Debug);
 
-        var regions = await regionsRetriever.RetrieveRegions();
-        
-        // Write the output
-        await outputFormatters[settings.Output]
-             .WriteRegions(settings, regions);
+        await AnsiConsoleExt.StatusAsync(settings.Quiet, "Fetching region data...", async ctx =>
+        {
+
+            var regions = await regionsRetriever.RetrieveRegions();
+
+            // Write the output
+            await outputFormatters[settings.Output]
+                    .WriteRegions(settings, regions);
+        });
 
         return 0;
     }

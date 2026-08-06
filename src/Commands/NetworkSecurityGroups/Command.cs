@@ -25,12 +25,17 @@ public class Command(IAzureResourceRetriever azureResourceRetriever) : AsyncComm
         azureResourceRetriever.ManagementApiAddress = settings.ManagementApiAddress;
         azureResourceRetriever.HttpTimeout = TimeSpan.FromSeconds(settings.HttpTimeout);
 
-        var networkSecurityGroups = await azureResourceRetriever.RetrieveNetworkSecurityGroups(
-            settings.Debug, settings.Subscription!.Value);
+        await AnsiConsoleExt.StatusAsync(settings.Quiet, "Fetching network security groups...", async ctx =>
+        {
+            var networkSecurityGroups = await azureResourceRetriever.RetrieveNetworkSecurityGroups(
+                settings.Debug, settings.Subscription!.Value);
 
-        // Write the output
-        await outputFormatters[settings.Output]
-            .WriteNetworkSecurityGroups(settings, networkSecurityGroups);
+            // Write the output
+            await outputFormatters[settings.Output]
+                .WriteNetworkSecurityGroups(settings, networkSecurityGroups);
+
+            ctx.Status = $"Retrieved {networkSecurityGroups.Count} network security groups.";
+        });
 
         return 0;
     }
