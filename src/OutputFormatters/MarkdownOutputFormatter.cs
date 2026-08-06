@@ -13,9 +13,9 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
         Console.WriteLine("|Region|Geography|Display Name|Location|");
         Console.WriteLine("|---|---|---|---|");
 
-        foreach (var region in regions.OrderBy(a => a.continent).ThenBy(a => a.geographyId))
+        foreach (var region in regions.OrderBy(a => a.Continent).ThenBy(a => a.GeographyId))
         {
-            Console.WriteLine($"|{region.continent}|{region.geographyId}|{region.displayName}|{region.location}|");
+            Console.WriteLine($"|{region.Continent}|{region.GeographyId}|{region.DisplayName}|{region.Location}|");
         }
 
         return Task.CompletedTask;
@@ -28,28 +28,28 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
         Console.WriteLine("|Name|Resource Group|Location|Subnets (Attached to NSG)|Security Rules (Priority Access Direction Protocol Source:Port -> Destination:Port)|");
         Console.WriteLine("|---|---|---|---|---|");
 
-        foreach (var nsg in networkSecurityGroups.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.name))
+        foreach (var nsg in networkSecurityGroups.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
         {
             var attachedSubnets = nsg.GetAttachedSubnetNames();
             var subnetSummary = attachedSubnets.Length == 0
                 ? "(none)"
                 : string.Join("<br>", attachedSubnets);
 
-            var rules = nsg.properties.securityRules ?? [];
+            var rules = nsg.Properties.SecurityRules ?? [];
             var ruleSummary = string.Join("<br>", rules
-                .OrderBy(r => string.Equals(r.properties.direction, "Inbound", StringComparison.OrdinalIgnoreCase)
+                .OrderBy(r => string.Equals(r.Properties.Direction, "Inbound", StringComparison.OrdinalIgnoreCase)
                     ? 0
-                    : string.Equals(r.properties.direction, "Outbound", StringComparison.OrdinalIgnoreCase)
+                    : string.Equals(r.Properties.Direction, "Outbound", StringComparison.OrdinalIgnoreCase)
                         ? 1
                         : 2)
-                .ThenBy(r => r.properties.priority)
-                .Select(r => $"{r.properties.priority} {r.properties.access} {r.properties.direction} {r.properties.protocol} " +
-                             $"{r.properties.GetValue(r.properties.sourceAddressPrefix, r.properties.sourceAddressPrefixes)}:" +
-                             $"{r.properties.GetValue(r.properties.sourcePortRange, r.properties.sourcePortRanges)} -> " +
-                             $"{r.properties.GetValue(r.properties.destinationAddressPrefix, r.properties.destinationAddressPrefixes)}:" +
-                             $"{r.properties.GetValue(r.properties.destinationPortRange, r.properties.destinationPortRanges)} ({r.name})"));
+                .ThenBy(r => r.Properties.Priority)
+                .Select(r => $"{r.Properties.Priority} {r.Properties.Access} {r.Properties.Direction} {r.Properties.Protocol} " +
+                             $"{r.Properties.GetValue(r.Properties.SourceAddressPrefix, r.Properties.SourceAddressPrefixes)}:" +
+                             $"{r.Properties.GetValue(r.Properties.SourcePortRange, r.Properties.SourcePortRanges)} -> " +
+                             $"{r.Properties.GetValue(r.Properties.DestinationAddressPrefix, r.Properties.DestinationAddressPrefixes)}:" +
+                             $"{r.Properties.GetValue(r.Properties.DestinationPortRange, r.Properties.DestinationPortRanges)} ({r.Name})"));
 
-            Console.WriteLine($"|{nsg.name}|{nsg.GetResourceGroupName()}|{nsg.location}|{subnetSummary}|{ruleSummary}|");
+            Console.WriteLine($"|{nsg.Name}|{nsg.GetResourceGroupName()}|{nsg.Location}|{subnetSummary}|{ruleSummary}|");
         }
 
         return Task.CompletedTask;

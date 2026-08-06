@@ -17,16 +17,16 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         table.AddColumn("Sustainability");
         table.AddColumn("Compliance");
 
-        foreach (var region in regions.OrderBy(a => a.continent).ThenBy(a => a.geographyId))
+        foreach (var region in regions.OrderBy(a => a.Continent).ThenBy(a => a.GeographyId))
         {
             table.AddRow(
-                new Markup(region.continent),
-                new Markup(region.geographyId),
-                new Markup((region.isOpen ? "[green]" : "[red]") + region.displayName + "[/]\n[dim](" + region.id +
+                new Markup(region.Continent),
+                new Markup(region.GeographyId),
+                new Markup((region.IsOpen ? "[green]" : "[red]") + region.DisplayName + "[/]\n[dim](" + region.Id +
                            ")[/]"),
-                new Markup(region.location),
-                new Markup(string.Join(", ", region.sustainabilityIds)),
-                new Markup(string.Join(", ", region.complianceIds.OrderBy(a => a))));
+                new Markup(region.Location),
+                new Markup(string.Join(", ", region.SustainabilityIds.OrderBy(a => a))),
+                new Markup(string.Join(", ", region.ComplianceIds.OrderBy(a => a))));
         }
 
         AnsiConsole.Write(table);
@@ -44,36 +44,36 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         table.AddColumn("Subnets (Attached to NSG)");
         table.AddColumn("Security Rules (Priority Access Direction Protocol Source:Port -> Destination:Port)");
 
-        foreach (var nsg in networkSecurityGroups.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.name))
+        foreach (var nsg in networkSecurityGroups.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
         {
             var attachedSubnets = nsg.GetAttachedSubnetNames();
             var subnetSummary = attachedSubnets.Length == 0
                 ? "[dim](none)[/]"
                 : string.Join("\n", attachedSubnets);
 
-            var rules = nsg.properties.securityRules ?? [];
+            var rules = nsg.Properties.SecurityRules ?? [];
             var ruleSummary = rules.Length == 0
                 ? "[dim](none)[/]"
                 : string.Join("\n", rules
-                    .OrderBy(r => string.Equals(r.properties.direction, "Inbound", StringComparison.OrdinalIgnoreCase)
+                    .OrderBy(r => string.Equals(r.Properties.Direction, "Inbound", StringComparison.OrdinalIgnoreCase)
                         ? 0
-                        : string.Equals(r.properties.direction, "Outbound", StringComparison.OrdinalIgnoreCase)
+                        : string.Equals(r.Properties.Direction, "Outbound", StringComparison.OrdinalIgnoreCase)
                             ? 1
                             : 2)
-                    .ThenBy(r => r.properties.priority)
+                    .ThenBy(r => r.Properties.Priority)
                     .Select(r =>
-                        $"{r.properties.priority} " +
-                        (string.Equals(r.properties.access, "Allow", StringComparison.OrdinalIgnoreCase) ? "[green]" : "[red]") +
-                        $"{r.properties.access}[/] {r.properties.direction} {r.properties.protocol} " +
-                        $"{r.properties.GetValue(r.properties.sourceAddressPrefix, r.properties.sourceAddressPrefixes)}:" +
-                        $"{r.properties.GetValue(r.properties.sourcePortRange, r.properties.sourcePortRanges)} -> " +
-                        $"{r.properties.GetValue(r.properties.destinationAddressPrefix, r.properties.destinationAddressPrefixes)}:" +
-                        $"{r.properties.GetValue(r.properties.destinationPortRange, r.properties.destinationPortRanges)} [dim]({r.name})[/]"));
+                        $"{r.Properties.Priority} " +
+                        (string.Equals(r.Properties.Access, "Allow", StringComparison.OrdinalIgnoreCase) ? "[green]" : "[red]") +
+                        $"{r.Properties.Access}[/] {r.Properties.Direction} {r.Properties.Protocol} " +
+                        $"{r.Properties.GetValue(r.Properties.SourceAddressPrefix, r.Properties.SourceAddressPrefixes)}:" +
+                        $"{r.Properties.GetValue(r.Properties.SourcePortRange, r.Properties.SourcePortRanges)} -> " +
+                        $"{r.Properties.GetValue(r.Properties.DestinationAddressPrefix, r.Properties.DestinationAddressPrefixes)}:" +
+                        $"{r.Properties.GetValue(r.Properties.DestinationPortRange, r.Properties.DestinationPortRanges)} [dim]({r.Name})[/]"));
 
             table.AddRow(
-                new Markup(nsg.name),
+                new Markup(nsg.Name),
                 new Markup(nsg.GetResourceGroupName()),
-                new Markup(nsg.location),
+                new Markup(nsg.Location),
                 new Markup(subnetSummary),
                 new Markup(ruleSummary));
         }

@@ -57,18 +57,18 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         {
             var content = await ExecuteTypedCallToManagementApi<NetworkSecurityGroupListResult>(includeDebugOutput, null, uri);
 
-            if (content?.value is { Length: > 0 })
+            if (content?.Value is { Length: > 0 })
             {
-                networkSecurityGroups.AddRange(content.value);
+                networkSecurityGroups.AddRange(content.Value);
             }
 
             // Follow the nextLink for paged results
-            if (string.IsNullOrEmpty(content?.nextLink))
+            if (string.IsNullOrEmpty(content?.NextLink))
             {
                 break;
             }
 
-            uri = new Uri(content.nextLink, UriKind.Absolute);
+            uri = new Uri(content.NextLink, UriKind.Absolute);
         }
 
         if (includeDebugOutput)
@@ -163,63 +163,63 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
 }
 
 public record Subscription(
-    string id,
-    string authorizationSource,
-    object[] managedByTenants,
-    string subscriptionId,
-    string tenantId,
-    string displayName,
-    string state
+    string Id,
+    string AuthorizationSource,
+    object[] ManagedByTenants,
+    string SubscriptionId,
+    string TenantId,
+    string DisplayName,
+    string State
 );
 
 public record NetworkSecurityGroupListResult(
-    NetworkSecurityGroup[] value,
-    string? nextLink
+    NetworkSecurityGroup[] Value,
+    string? NextLink
 );
 
 public record NetworkSecurityGroup(
-    string id,
-    string name,
-    string type,
-    string location,
-    string? etag,
-    Dictionary<string, string>? tags,
-    NetworkSecurityGroupProperties properties
+    string Id,
+    string Name,
+    string Type,
+    string Location,
+    string? Etag,
+    Dictionary<string, string>? Tags,
+    NetworkSecurityGroupProperties Properties
 );
 
 public record NetworkSecurityGroupProperties(
-    string provisioningState,
-    string resourceGuid,
-    SecurityRule[]? securityRules,
-    SecurityRule[]? defaultSecurityRules,
-    ResourceReference[]? networkInterfaces,
-    ResourceReference[]? subnets,
-    bool? flushConnection
+    string ProvisioningState,
+    string ResourceGuid,
+    SecurityRule[]? SecurityRules,
+    SecurityRule[]? DefaultSecurityRules,
+    ResourceReference[]? NetworkInterfaces,
+    ResourceReference[]? Subnets,
+    bool? FlushConnection
 );
 
 public record SecurityRule(
-    string id,
-    string name,
-    string? etag,
-    string? type,
-    SecurityRuleProperties properties
+    string Id,
+    string Name,
+    string? Etag,
+    string? Type,
+    SecurityRuleProperties Properties
 );
 
 public record SecurityRuleProperties(
-    string? provisioningState,
-    string? description,
-    string protocol,
-    string? sourcePortRange,
-    string? destinationPortRange,
-    string? sourceAddressPrefix,
-    string? destinationAddressPrefix,
-    string access,
-    int priority,
-    string direction,
-    string[]? sourcePortRanges,
-    string[]? destinationPortRanges,
-    string[]? sourceAddressPrefixes,
-    string[]? destinationAddressPrefixes
+    string? ProvisioningState,
+    string? Description,
+    string Protocol,
+    string? SourcePortRange,
+    string? DestinationPortRange,
+    string? SourceAddressPrefix,
+    string? DestinationAddressPrefix,
+    string Access,
+    int Priority,
+    string Direction,
+    string[]? SourcePortRanges,
+    string[]? DestinationPortRanges,
+    string[]? SourceAddressPrefixes,
+    string[]? DestinationAddressPrefixes
 );
 
-public record ResourceReference(string id);
+public record ResourceReference(string Id);

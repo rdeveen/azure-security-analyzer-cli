@@ -18,15 +18,15 @@ public static class FormatterExtensions
     {
         public string GetResourceGroupName()
         {
-            return GetSegmentValue(networkSecurityGroup.id, "resourceGroups");
+            return GetSegmentValue(networkSecurityGroup.Id, "resourceGroups");
         }
 
         public string[] GetAttachedSubnetNames()
         {
-            var subnets = networkSecurityGroup.properties.subnets ?? [];
+            var subnets = networkSecurityGroup.Properties.Subnets ?? [];
 
             return subnets
-                .Select(s => GetSegmentValue(s.id, "subnets"))
+                .Select(s => GetSegmentValue(s.Id, "subnets"))
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
