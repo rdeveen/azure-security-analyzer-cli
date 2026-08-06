@@ -1,0 +1,72 @@
+name: Deploy Infrastructure
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "infra/**"
+      - ".github/workflows/infra.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/**"
+      - ".github/workflows/infra.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+  
+defaults:
+  run:
+    working-directory: infra
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: azure_prod
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          auth-type: identity
+
+      - name: Validate Bicep
+        uses: azure/bicep-deploy@v2
+        with:
+          type: deploymentStack
+          operation: validate
+          scope: resourceGroup
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: azure-security-analyzer-cli
+          location: westeurope
+          template-file: ./main.bicep
+          name: azure-security-analyzer-cli-deployment
+          description: Deployment for Azure Security Analyzer CLI
+          action-on-unmanage-resourcegroups: delete
+          action-on-unmanage-resources: delete
+          deny-settings-mode: none
+
+      - name: Deploy Bicep
+        uses: azure/bicep-deploy@v2
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+        with:
+          type: deploymentStack
+          operation: deploy
+          scope: resourceGroup
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: azure-security-analyzer-cli
+          location: westeurope
+          template-file: ./main.bicep
+          name: azure-security-analyzer-cli-deployment
+          description: Deployment for Azure Security Analyzer CLI
+          action-on-unmanage-resourcegroups: delete
+          action-on-unmanage-resources: delete
+          deny-settings-mode: none
