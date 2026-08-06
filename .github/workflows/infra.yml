@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: azure_prod
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Azure Login
         uses: azure/login@v3
