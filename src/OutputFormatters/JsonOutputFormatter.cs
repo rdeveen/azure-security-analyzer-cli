@@ -2,7 +2,6 @@ using System.Text.Json;
 using AzureSecurityAnalyzer.Commands;
 using AzureSecurityAnalyzer.ManagementApi;
 using AzureSecurityAnalyzer.RegionsApi;
-using DevLab.JmesPath;
 using Spectre.Console;
 using Spectre.Console.Json;
 
@@ -26,17 +25,9 @@ public class JsonOutputFormatter : BaseOutputFormatter
 
     private static void WriteJson(Commands.ICostSettings settings, object items)
     {
-
         var options = new JsonSerializerOptions { WriteIndented = true };
         
         var json = JsonSerializer.Serialize(items, options );
-
-        if (!string.IsNullOrWhiteSpace(settings.Query))
-        {
-            var jmes = new JmesPath();
-
-            json = jmes.Transform(json, settings.Query);
-        }
 
         switch (settings.Output)
         {
@@ -49,7 +40,7 @@ public class JsonOutputFormatter : BaseOutputFormatter
                         .BracesColor(Color.Red)
                         .BracketColor(Color.Green)
                         .ColonColor(Color.Blue)
-                        .CommaColor(Color.Red)
+                        .CommaColor(Color.Gray)
                         .StringColor(Color.Green)
                         .NumberColor(Color.Blue)
                         .BooleanColor(Color.Red)

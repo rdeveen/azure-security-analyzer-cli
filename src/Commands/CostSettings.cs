@@ -7,7 +7,6 @@ public interface ICostSettings
 {
     bool SkipHeader { get; set; }
     OutputFormat Output { get; set; }
-    string Query { get; set; }
 }
 
 public class CostSettings : LogCommandSettings, ICostSettings
@@ -20,57 +19,14 @@ public class CostSettings : LogCommandSettings, ICostSettings
     [Description("The resource group to scope the request to. Need to be used in combination with the subscription id.")]
     public string? ResourceGroup { get; set; }
 
-    [CommandOption("-b|--billing-account")]
-    [Description("The billing account id to use.")]
-    public string? BillingAccountId { get; set; }
-
-    [CommandOption("-e|--enrollment-account")]
-    [Description("The enrollment account id to use.")]
-    public string? EnrollmentAccountId { get; set; }
-
     [CommandOption("-o|--output")]
     [Description("The output format to use. Defaults to Console (Console, Json, JsonC, Text, Markdown, Csv)")]
     public OutputFormat Output { get; set; } = OutputFormat.Console;
-
-    [CommandOption("--from")]
-    [Description("The start date to use for the costs. Defaults to the first day of the previous month.")]
-    public DateOnly? From { get; set; }
-
-    [CommandOption("--to")]
-    [Description("The end date to use for the costs. Defaults to the current date.")]
-    public DateOnly? To { get; set; }
-
-    [CommandOption("--others-cutoff")]
-    [Description("The number of items to show before collapsing the rest into an 'Others' item.")]
-    [DefaultValue(10)]
-    public int OthersCutoff { get; set; } = 10;
-
-    [CommandOption("--query")]
-    [Description("JMESPath query string, applicable for the Json output only. See http://jmespath.org/ for more information and examples.")]
-    public string Query { get; set; } = string.Empty;
-
-    [CommandOption("--useUSD")]
-    [Description("Force the use of USD for the currency. Defaults to false to use the currency returned by the API.")]
-    [DefaultValue(false)]
-    public bool UseUSD { get; set; }
 
     [CommandOption("--skipHeader")]
     [Description("Skip header creation for specific output formats. Useful when appending the output from multiple runs into one file. Defaults to false.")]
     [DefaultValue(false)]
     public bool SkipHeader { get; set; }
-
-    [CommandOption("--filter")]
-    [Description("Filter the output by the specified properties. Defaults to no filtering and can be multiple values.")]
-    public string[] Filter { get; set; } = Array.Empty<string>();
-
-    [CommandOption("--includeTags")]
-    [Description("Include Tags from the selected dimension. The option is used for DailyCost report and output to Json, JsonC or Csv. Valid only for DailyCost report and output to Json, JsonC or Csv. Ignored in other reports and output formats.")]
-    [DefaultValue(false)]
-    public bool IncludeTags { get; set; }
-
-    [CommandOption("--costApiBaseAddress <BASE_ADDRESS>")]
-    [Description("The base address for the Cost API. Defaults to https://management.azure.com/")]
-    public string CostApiAddress { get; set; } = "https://management.azure.com/";
 
     [CommandOption("--managementApiAddress <BASE_ADDRESS>")]
     [Description("The base address for the Management API. Defaults to https://management.azure.com/")]
@@ -88,17 +44,9 @@ public class CostSettings : LogCommandSettings, ICostSettings
     {
         get
         {
-            if ((Subscription == null || Subscription == Guid.Empty) && EnrollmentAccountId != null && BillingAccountId != null)
-            {
-                return Scope.EnrollmentAccount(BillingAccountId, EnrollmentAccountId);
-            }
-            else if (Subscription != null && !string.IsNullOrWhiteSpace(ResourceGroup))
+            if (Subscription != null && !string.IsNullOrWhiteSpace(ResourceGroup))
             {
                 return Scope.ResourceGroup(Subscription.Value, ResourceGroup);
-            }
-            else if (BillingAccountId != null)
-            {
-                return Scope.BillingAccount(BillingAccountId);
             }
             else // default to subscription
             {
