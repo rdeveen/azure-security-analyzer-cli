@@ -14,13 +14,14 @@ on:
       - "src/**"
       - ".github/workflows/build.yml" 
 
+defaults:
+  run:
+    working-directory: ./src
+
 jobs:
   build:
     if: "!contains(github.event.head_commit.message, 'skip-ci')"
-    runs-on: ubuntu-latest    
-    defaults:
-      run:
-        working-directory: ./src
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -36,3 +37,29 @@ jobs:
 
       - name: Build
         run: dotnet build --configuration Release --no-restore
+
+  test:
+    runs-on: ubuntu-latest    
+    environment: azure_prod
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Azure Login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run Integration Tests
+        run: dotnet run -- nsg -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown >> $GITHUB_STEP_SUMMARY
