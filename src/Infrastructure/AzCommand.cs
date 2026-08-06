@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 
 namespace AzureSecurityAnalyzer.Infrastructure;
@@ -7,10 +8,13 @@ public static class AzCommand
 {
     public static string GetDefaultAzureSubscriptionId()
     {
+        var filename = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "cmd.exe" : "az";
+        var arguments = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "/d /c az account show" : "account show";
+        
         var startInfo = new ProcessStartInfo
         {
-            FileName = "az",
-            Arguments = "account show",
+            FileName = filename,
+            Arguments = arguments,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
