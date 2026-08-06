@@ -1,4 +1,6 @@
 using AzureSecurityAnalyzer.Commands.Regions;
+using Command = AzureSecurityAnalyzer.Commands.Regions.Command;
+using AzureSecurityAnalyzer.RegionsApi;
 
 using Shouldly;
 using Moq;
@@ -8,20 +10,20 @@ namespace AzureSecurityAnalyzer.Tests.Commands.Regions;
 
 public class CommandTests
 {
-    private readonly Mock<AzureSecurityAnalyzer.RegionsApi.IRegionsRetriever> mockRegionsRetriever;
-    private readonly AzureSecurityAnalyzer.Commands.Regions.Command command;
+    private readonly Mock<IRegionsRetriever> mockRegionsRetriever;
+    private readonly Command command;
 
     public CommandTests()
     {
-        mockRegionsRetriever = new Mock<AzureSecurityAnalyzer.RegionsApi.IRegionsRetriever>();
-        command = new AzureSecurityAnalyzer.Commands.Regions.Command(mockRegionsRetriever.Object);
+        mockRegionsRetriever = new Mock<IRegionsRetriever>();
+        command = new Command(mockRegionsRetriever.Object);
     }
 
     [Fact]
     public void Constructor_SetsUpOutputFormatters()
     {
         // Act & Assert - Constructor should not throw
-        var command = new AzureSecurityAnalyzer.Commands.Regions.Command(mockRegionsRetriever.Object);
+        var command = new Command(mockRegionsRetriever.Object);
         command.ShouldNotBeNull();
     }
 
@@ -29,7 +31,7 @@ public class CommandTests
     public void RegionsSettings_DefaultValues_AreSetCorrectly()
     {
         // Arrange & Act
-        var settings = new AzureSecurityAnalyzer.Commands.Regions.Settings();
+        var settings = new Settings();
 
         // Assert
         settings.Output.ShouldBe(AzureSecurityAnalyzer.Commands.OutputFormat.Console);
@@ -37,7 +39,7 @@ public class CommandTests
 
     private static CommandContext CreateCommandContext()
     {
-        var remainingArguments = Mock.Of<Spectre.Console.Cli.IRemainingArguments>();
-        return new Spectre.Console.Cli.CommandContext([], remainingArguments, "regions", null);
+        var remainingArguments = Mock.Of<IRemainingArguments>();
+        return new CommandContext([], remainingArguments, "regions", null);
     }
 }
