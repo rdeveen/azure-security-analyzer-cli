@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  
   <PropertyGroup>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>azure-security-analyzer</ToolCommandName>
@@ -44,4 +45,9 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="azure-security-analyzer-cli.tests" />
+  </ItemGroup>
+    
 </Project>
