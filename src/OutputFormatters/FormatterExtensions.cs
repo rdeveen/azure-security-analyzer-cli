@@ -21,17 +21,25 @@ public static class FormatterExtensions
             return GetSegmentValue(networkSecurityGroup.Id, "resourceGroups");
         }
 
-        public string[] GetAttachedSubnetNames()
+        public string[] GetAttachedNames()
         {
             var subnets = networkSecurityGroup.Properties.Subnets ?? [];
+            var networkInterfaces = networkSecurityGroup.Properties.NetworkInterfaces ?? [];
 
-            return subnets
-                .Select(s => GetSegmentValue(s.Id, "subnets"))
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
-                .ToArray()!;
+            return GetNames(subnets, "subnets", "Subnet")
+                .Concat(GetNames(networkInterfaces, "networkInterfaces", "NIC"))
+                .ToArray();
         }
+    }
+
+    private static IEnumerable<string> GetNames(ResourceReference[] references, string segmentName, string label)
+    {
+        return references
+            .Select(r => GetSegmentValue(r.Id, segmentName))
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
+            .Select(s => $"{label}: {s}");
     }
 
     private static string GetSegmentValue(string resourceId, string segmentName)

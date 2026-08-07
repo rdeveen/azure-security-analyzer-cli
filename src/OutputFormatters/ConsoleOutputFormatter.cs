@@ -41,15 +41,15 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         table.AddColumn("Name");
         table.AddColumn("Resource Group");
         table.AddColumn("Location");
-        table.AddColumn("Subnets (Attached to NSG)");
+        table.AddColumn("Attached");
         table.AddColumn("Security Rules (Priority Access Direction Protocol Source:Port -> Destination:Port)");
 
         foreach (var nsg in networkSecurityGroups.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
         {
-            var attachedSubnets = nsg.GetAttachedSubnetNames();
-            var subnetSummary = attachedSubnets.Length == 0
+            var attached = nsg.GetAttachedNames();
+            var attachedSummary = attached.Length == 0
                 ? "[dim](none)[/]"
-                : string.Join("\n", attachedSubnets);
+                : string.Join("\n", attached);
 
             var rules = nsg.Properties.SecurityRules ?? [];
             var ruleSummary = rules.Length == 0
@@ -74,7 +74,7 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
                 new Markup(nsg.Name),
                 new Markup(nsg.GetResourceGroupName()),
                 new Markup(nsg.Location),
-                new Markup(subnetSummary),
+                new Markup(attachedSummary),
                 new Markup(ruleSummary));
         }
 

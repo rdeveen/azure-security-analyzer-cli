@@ -25,15 +25,15 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
     {
         Console.WriteLine("# Network Security Groups");
         Console.WriteLine();
-        Console.WriteLine("|Name|Resource Group|Location|Subnets (Attached to NSG)|Security Rules (Priority Access Direction Protocol Source:Port -> Destination:Port)|");
+        Console.WriteLine("|Name|Resource Group|Location|Attached|Security Rules (Priority Access Direction Protocol Source:Port -> Destination:Port)|");
         Console.WriteLine("|---|---|---|---|---|");
 
         foreach (var nsg in networkSecurityGroups.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
         {
-            var attachedSubnets = nsg.GetAttachedSubnetNames();
-            var subnetSummary = attachedSubnets.Length == 0
+            var attached = nsg.GetAttachedNames();
+            var attachedSummary = attached.Length == 0
                 ? "(none)"
-                : string.Join("<br>", attachedSubnets);
+                : string.Join("<br>", attached);
 
             var rules = nsg.Properties.SecurityRules ?? [];
             var ruleSummary = string.Join("<br>", rules
@@ -49,7 +49,7 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
                              $"{r.Properties.GetValue(r.Properties.DestinationAddressPrefix, r.Properties.DestinationAddressPrefixes)}:" +
                              $"{r.Properties.GetValue(r.Properties.DestinationPortRange, r.Properties.DestinationPortRanges)} ({r.Name})"));
 
-            Console.WriteLine($"|{nsg.Name}|{nsg.GetResourceGroupName()}|{nsg.Location}|{subnetSummary}|{ruleSummary}|");
+            Console.WriteLine($"|{nsg.Name}|{nsg.GetResourceGroupName()}|{nsg.Location}|{attachedSummary}|{ruleSummary}|");
         }
 
         return Task.CompletedTask;
