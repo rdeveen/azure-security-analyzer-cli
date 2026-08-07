@@ -16,6 +16,7 @@ public interface IAzureResourceRetriever
 
     Task<Subscription> RetrieveSubscription(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId);
+    Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId);
 }
 
 public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetriever
@@ -80,6 +81,43 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         }
 
         return networkSecurityGroups;
+    }
+
+    public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId)
+    {
+        var recommendations = new List<AdvisorRecommendation>();
+
+        var uri = new Uri(
+            $"/subscriptions/{subscriptionId}/providers/Microsoft.Advisor/recommendations?api-version=2023-01-01",
+            UriKind.Relative);
+
+        while (true)
+        {
+            var content = await ExecuteTypedCallToManagementApi<AdvisorRecommendationListResult>(includeDebugOutput, null, uri);
+
+            if (content?.Value is { Length: > 0 })
+            {
+                recommendations.AddRange(content.Value);
+            }
+
+            // Follow the nextLink for paged results
+            if (string.IsNullOrEmpty(content?.NextLink))
+            {
+                break;
+            }
+
+            uri = new Uri(content.NextLink, UriKind.Absolute);
+        }
+
+        if (includeDebugOutput)
+        {
+            var json = JsonSerializer.Serialize(recommendations, jsonSerializerOptions);
+            AnsiConsole.WriteLine($"Retrieved {recommendations.Count} advisor recommendations:");
+            AnsiConsole.Write(new JsonText(json));
+            AnsiConsole.WriteLine();
+        }
+
+        return recommendations;
     }
 
     private async Task<T?> ExecuteTypedCallToManagementApi<T>(bool includeDebugOutput, object? payload, Uri uri)
@@ -223,3 +261,37 @@ public record SecurityRuleProperties(
 );
 
 public record ResourceReference(string Id);
+
+public record AdvisorRecommendationListResult(
+    AdvisorRecommendation[] Value,
+    string? NextLink
+);
+
+public record AdvisorRecommendation(
+    string Id,
+    string Name,
+    string Type,
+    AdvisorRecommendationProperties Properties
+);
+
+public record AdvisorRecommendationProperties(
+    string Category,
+    string Impact,
+    string? ImpactedField,
+    string? ImpactedValue,
+    DateTimeOffset? LastUpdated,
+    string? RecommendationTypeId,
+    AdvisorShortDescription? ShortDescription,
+    AdvisorResourceMetadata? ResourceMetadata,
+    string[]? SuppressionIds
+);
+
+public record AdvisorShortDescription(
+    string? Problem,
+    string? Solution
+);
+
+public record AdvisorResourceMetadata(
+    string? ResourceId,
+    string? Source
+);

@@ -82,4 +82,42 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
 
         return Task.CompletedTask;
     }
+
+    public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
+    {
+        var table = new Table();
+        table.Border(TableBorder.Rounded);
+        table.AddColumn("Category");
+        table.AddColumn("Impact");
+        table.AddColumn("Impacted Resource");
+        table.AddColumn("Problem");
+        table.AddColumn("Solution");
+        table.AddColumn("Last Updated");
+
+        foreach (var recommendation in recommendations
+                     .OrderBy(r => r.Properties.Category)
+                     .ThenBy(r => r.GetImpactOrder())
+                     .ThenBy(r => r.Properties.ImpactedValue))
+        {
+            var impactColor = recommendation.Properties.Impact switch
+            {
+                "High" => "[red]",
+                "Medium" => "[yellow]",
+                _ => "[green]"
+            };
+
+            table.AddRow(
+                new Markup(recommendation.Properties.Category),
+                new Markup($"{impactColor}{recommendation.Properties.Impact}[/]"),
+                new Markup(Markup.Escape(recommendation.Properties.ImpactedValue ?? string.Empty) +
+                           $"\n[dim]({Markup.Escape(recommendation.Properties.ImpactedField ?? string.Empty)})[/]"),
+                new Markup(Markup.Escape(recommendation.Properties.ShortDescription?.Problem ?? string.Empty)),
+                new Markup(Markup.Escape(recommendation.Properties.ShortDescription?.Solution ?? string.Empty)),
+                new Markup(recommendation.Properties.LastUpdated?.ToString("yyyy-MM-dd") ?? string.Empty));
+        }
+
+        AnsiConsole.Write(table);
+
+        return Task.CompletedTask;
+    }
 }

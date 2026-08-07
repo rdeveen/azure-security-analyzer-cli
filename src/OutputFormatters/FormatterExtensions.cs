@@ -32,6 +32,20 @@ public static class FormatterExtensions
         }
     }
 
+    extension(AdvisorRecommendation recommendation)
+    {
+        public int GetImpactOrder()
+        {
+            return recommendation.Properties.Impact switch
+            {
+                "High" => 0,
+                "Medium" => 1,
+                "Low" => 2,
+                _ => 3
+            };
+        }
+    }
+
     private static IEnumerable<string> GetNames(ResourceReference[] references, string segmentName, string label)
     {
         return references

@@ -23,6 +23,13 @@ public class JsonOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
+    {
+        WriteJson(settings, recommendations);
+
+        return Task.CompletedTask;
+    }
+
     private static void WriteJson(Commands.ICostSettings settings, object items)
     {
         var options = new JsonSerializerOptions { WriteIndented = true };

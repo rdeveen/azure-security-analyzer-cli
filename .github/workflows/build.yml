@@ -122,3 +122,6 @@ jobs:
 
       - name: Run Integration Tests
         run: dotnet run -- nsg -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet >> $GITHUB_STEP_SUMMARY
+
+      - name: Run Advisor Integration Test
+        run: dotnet run -- advisor -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet >> $GITHUB_STEP_SUMMARY

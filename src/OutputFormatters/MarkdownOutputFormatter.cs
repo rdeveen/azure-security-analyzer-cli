@@ -54,4 +54,28 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
 
         return Task.CompletedTask;
     }
+
+    public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
+    {
+        Console.WriteLine("# Advisor Recommendations");
+        Console.WriteLine();
+        Console.WriteLine("|Category|Impact|Impacted Resource|Problem|Solution|Last Updated|");
+        Console.WriteLine("|---|---|---|---|---|---|");
+
+        foreach (var recommendation in recommendations
+                     .OrderBy(r => r.Properties.Category)
+                     .ThenBy(r => r.GetImpactOrder())
+                     .ThenBy(r => r.Properties.ImpactedValue))
+        {
+            Console.WriteLine(
+                $"|{recommendation.Properties.Category}" +
+                $"|{recommendation.Properties.Impact}" +
+                $"|{recommendation.Properties.ImpactedValue} ({recommendation.Properties.ImpactedField})" +
+                $"|{recommendation.Properties.ShortDescription?.Problem}" +
+                $"|{recommendation.Properties.ShortDescription?.Solution}" +
+                $"|{recommendation.Properties.LastUpdated?.ToString("yyyy-MM-dd")}|");
+        }
+
+        return Task.CompletedTask;
+    }
 }
