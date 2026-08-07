@@ -18,15 +18,17 @@ on:
 permissions:
   id-token: write
   contents: read
-  
-defaults:
-  run:
-    working-directory: infra
+
+env:
+  WORKING_DIRECTORY: infra
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: azure_prod
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIRECTORY }}
     steps:
       - uses: actions/checkout@v7
 
@@ -46,7 +48,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: azure-security-analyzer-cli
           location: westeurope
-          template-file: ./infra/main.bicep
+          template-file: ${{ env.WORKING_DIRECTORY }}/main.bicep
           name: azure-security-analyzer-cli-deployment
           description: Deployment for Azure Security Analyzer CLI
           action-on-unmanage-resourcegroups: delete
@@ -63,7 +65,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: azure-security-analyzer-cli
           location: westeurope
-          template-file: ./infra/main.bicep
+          template-file: ${{ env.WORKING_DIRECTORY }}/main.bicep
           name: azure-security-analyzer-cli-deployment
           description: Deployment for Azure Security Analyzer CLI
           action-on-unmanage-resourcegroups: delete
