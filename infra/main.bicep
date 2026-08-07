@@ -46,35 +46,89 @@ resource nsgWithAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = 
   }
 }
 
-resource nsgNic1 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
-  name: 'nsg-nic-1'
+resource nsgNicEmpty 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+  name: 'nsg-nic-empty'
   location: location
   properties: {
     securityRules: []
   }
 }
 
-resource nsgNic2 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
-  name: 'nsg-nic-2'
+resource nsgNicAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+  name: 'nsg-nic-allow-all'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'AllowAllInbound'
+        properties: {
+          priority: 100
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'AllowAllOutbound'
+        properties: {
+          priority: 200
+          direction: 'Outbound'
+          access: 'Allow'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
+  }
+}
+
+resource nsgSubnetEmpty 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+  name: 'nsg-subnet-empty'
   location: location
   properties: {
     securityRules: []
   }
 }
 
-resource nsgSubnet1 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
-  name: 'nsg-subnet-1'
+resource nsgSubnetAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+  name: 'nsg-subnet-allow-all'
   location: location
   properties: {
-    securityRules: []
-  }
-}
-
-resource nsgSubnet2 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
-  name: 'nsg-subnet-2'
-  location: location
-  properties: {
-    securityRules: []
+    securityRules: [
+      {
+        name: 'AllowAllInbound'
+        properties: {
+          priority: 100
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'AllowAllOutbound'
+        properties: {
+          priority: 200
+          direction: 'Outbound'
+          access: 'Allow'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
   }
 }
 
@@ -96,7 +150,7 @@ resource subnet1 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
   properties: {
     addressPrefix: '10.0.1.0/24'
     networkSecurityGroup: {
-      id: nsgSubnet1.id
+      id: nsgSubnetEmpty.id
     }
   }
 }
@@ -107,7 +161,7 @@ resource subnet2 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
   properties: {
     addressPrefix: '10.0.2.0/24'
     networkSecurityGroup: {
-      id: nsgSubnet2.id
+      id: nsgSubnetAllowAll.id
     }
   }
   dependsOn: [
@@ -131,7 +185,7 @@ resource nic1 'Microsoft.Network/networkInterfaces@2023-05-01' = {
       }
     ]
     networkSecurityGroup: {
-      id: nsgNic1.id
+      id: nsgNicEmpty.id
     }
   }
 }
@@ -152,7 +206,7 @@ resource nic2 'Microsoft.Network/networkInterfaces@2023-05-01' = {
       }
     ]
     networkSecurityGroup: {
-      id: nsgNic2.id
+      id: nsgNicAllowAll.id
     }
   }
 }
