@@ -170,6 +170,9 @@ resource subnetNsgAllowAll 'Microsoft.Network/virtualNetworks/subnets@2023-05-01
       id: nsgSubnetAllowAll.id
     }
   }
+  dependsOn: [
+    subnetNsgEmpty
+  ]
 }
 
 @description('This subnet has no NSG associated with it which results in a Security recommendation from Azure Advisor.')
