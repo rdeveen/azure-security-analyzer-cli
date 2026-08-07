@@ -87,27 +87,32 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
         '10.0.0.0/16'
       ]
     }
-    subnets: [
-      {
-        name: 'subnet-1'
-        properties: {
-          addressPrefix: '10.0.1.0/24'
-          networkSecurityGroup: {
-            id: nsgSubnet1.id
-          }
-        }
-      }
-      {
-        name: 'subnet-2'
-        properties: {
-          addressPrefix: '10.0.2.0/24'
-          networkSecurityGroup: {
-            id: nsgSubnet2.id
-          }
-        }
-      }
-    ]
   }
+}
+
+resource subnet1 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+  parent: vnet
+  name: 'subnet-1'
+  properties: {
+    addressPrefix: '10.0.1.0/24'
+    networkSecurityGroup: {
+      id: nsgSubnet1.id
+    }
+  }
+}
+
+resource subnet2 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+  parent: vnet
+  name: 'subnet-2'
+  properties: {
+    addressPrefix: '10.0.2.0/24'
+    networkSecurityGroup: {
+      id: nsgSubnet2.id
+    }
+  }
+  dependsOn: [
+    subnet1
+  ]
 }
 
 resource nic1 'Microsoft.Network/networkInterfaces@2023-05-01' = {
@@ -120,7 +125,7 @@ resource nic1 'Microsoft.Network/networkInterfaces@2023-05-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: vnet.properties.subnets[0].id
+            id: subnet1.id
           }
         }
       }
@@ -141,7 +146,7 @@ resource nic2 'Microsoft.Network/networkInterfaces@2023-05-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: vnet.properties.subnets[1].id
+            id: subnet2.id
           }
         }
       }
