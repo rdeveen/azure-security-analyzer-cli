@@ -132,8 +132,8 @@ resource nsgSubnetAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' 
   }
 }
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
-  name: 'vnet-main'
+resource vnetSecurityTest 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+  name: 'vnet-security-test'
   location: location
   properties: {
     addressSpace: {
@@ -144,9 +144,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   }
 }
 
-resource subnet1 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
-  parent: vnet
-  name: 'subnet-1'
+resource subnetNsgEmpty 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+  parent: vnetSecurityTest
+  name: 'subnet-nsg-empty'
   properties: {
     addressPrefix: '10.0.1.0/24'
     networkSecurityGroup: {
@@ -155,9 +155,9 @@ resource subnet1 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
   }
 }
 
-resource subnet2 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
-  parent: vnet
-  name: 'subnet-2'
+resource subnetNsgAllowAll 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+  parent: vnetSecurityTest
+  name: 'subnet-nsg-allow-all'
   properties: {
     addressPrefix: '10.0.2.0/24'
     networkSecurityGroup: {
@@ -165,12 +165,12 @@ resource subnet2 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
     }
   }
   dependsOn: [
-    subnet1
+    subnetNsgEmpty
   ]
 }
 
-resource nic1 'Microsoft.Network/networkInterfaces@2023-05-01' = {
-  name: 'nic-1'
+resource nicNsgEmpty 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+  name: 'nic-nsg-empty'
   location: location
   properties: {
     ipConfigurations: [
@@ -179,7 +179,7 @@ resource nic1 'Microsoft.Network/networkInterfaces@2023-05-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: subnet1.id
+            id: subnetNsgEmpty.id
           }
         }
       }
@@ -190,8 +190,8 @@ resource nic1 'Microsoft.Network/networkInterfaces@2023-05-01' = {
   }
 }
 
-resource nic2 'Microsoft.Network/networkInterfaces@2023-05-01' = {
-  name: 'nic-2'
+resource nicNsgAllowAll 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+  name: 'nic-nsg-allow-all'
   location: location
   properties: {
     ipConfigurations: [
@@ -200,7 +200,7 @@ resource nic2 'Microsoft.Network/networkInterfaces@2023-05-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: subnet2.id
+            id: subnetNsgAllowAll.id
           }
         }
       }
