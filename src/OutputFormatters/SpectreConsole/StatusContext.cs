@@ -20,9 +20,9 @@ namespace AzureSecurityAnalyzer.OutputFormatters.SpectreConsole;
 
 public class StatusContext
 {
-    private readonly ProgressContext context = default!;
+    private readonly ProgressContext? context;
     private readonly ProgressTask? task;
-    private readonly SpinnerColumn spinnerColumn = default!;
+    private readonly SpinnerColumn spinnerColumn = new();
 
     /// <summary>
     /// Gets or sets the current status.
@@ -68,12 +68,15 @@ public class StatusContext
     /// </summary>
     public void Refresh()
     {
-        context.Refresh();
+        context?.Refresh();
     }
 
     private void SetStatus(string? status)
     {
-        task!.Description = status ?? string.Empty;
+        if (task is not null)
+        {
+            task.Description = status ?? string.Empty;
+        }
     }
 
     private void SetSpinner(Spinner spinner)
