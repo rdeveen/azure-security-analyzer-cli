@@ -4,7 +4,7 @@ targetScope = 'resourceGroup'
 param location string = resourceGroup().location
 
 @description('This NSG has no security rules and is not associated with any NIC or Subnet.')
-resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+resource nsg 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-empty'
   location: location
   properties: {
@@ -13,7 +13,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
 }
 
 @description('This NSG has security rules that allow all inbound and outbound traffic and is not associated with any NIC or Subnet.')
-resource nsgWithAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+resource nsgWithAllowAll 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-allow-all'
   location: location
   properties: {
@@ -49,7 +49,7 @@ resource nsgWithAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = 
 }
 
 @description('This NSG has no security rules and is associated with a NIC.')
-resource nsgNicEmpty 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+resource nsgNicEmpty 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-nic-empty'
   location: location
   properties: {
@@ -58,7 +58,7 @@ resource nsgNicEmpty 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
 }
 
 @description('This NSG has security rules that allow all inbound and outbound traffic and is associated with a NIC.')
-resource nsgNicAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+resource nsgNicAllowAll 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-nic-allow-all'
   location: location
   properties: {
@@ -94,7 +94,7 @@ resource nsgNicAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
 }
 
 @description('This NSG has no security rules and is associated with a Subnet.')
-resource nsgSubnetEmpty 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+resource nsgSubnetEmpty 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-subnet-empty'
   location: location
   properties: {
@@ -103,7 +103,7 @@ resource nsgSubnetEmpty 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
 }
 
 @description('This NSG has security rules that allow all inbound and outbound traffic and is associated with a Subnet.')
-resource nsgSubnetAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+resource nsgSubnetAllowAll 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-subnet-allow-all'
   location: location
   properties: {
@@ -138,7 +138,7 @@ resource nsgSubnetAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' 
   }
 }
 
-resource vnetSecurityTest 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+resource vnetSecurityTest 'Microsoft.Network/virtualNetworks@2025-07-01' = {
   name: 'vnet-security-test'
   location: location
   properties: {
@@ -150,7 +150,7 @@ resource vnetSecurityTest 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   }
 }
 
-resource subnetNsgEmpty 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+resource subnetNsgEmpty 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = {
   parent: vnetSecurityTest
   name: 'subnet-nsg-empty'
   properties: {
@@ -161,7 +161,7 @@ resource subnetNsgEmpty 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' =
   }
 }
 
-resource subnetNsgAllowAll 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+resource subnetNsgAllowAll 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = {
   parent: vnetSecurityTest
   name: 'subnet-nsg-allow-all'
   properties: {
@@ -170,9 +170,6 @@ resource subnetNsgAllowAll 'Microsoft.Network/virtualNetworks/subnets@2023-05-01
       id: nsgSubnetAllowAll.id
     }
   }
-  dependsOn: [
-    subnetNsgEmpty
-  ]
 }
 
 @description('This subnet has no NSG associated with it which results in a Security recommendation from Azure Advisor.')
@@ -184,7 +181,7 @@ resource subnetNsgNone 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = 
   }
 }
 
-resource nicNsgEmpty 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+resource nicNsgEmpty 'Microsoft.Network/networkInterfaces@2025-07-01' = {
   name: 'nic-nsg-empty'
   location: location
   properties: {
@@ -205,7 +202,7 @@ resource nicNsgEmpty 'Microsoft.Network/networkInterfaces@2023-05-01' = {
   }
 }
 
-resource nicNsgAllowAll 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+resource nicNsgAllowAll 'Microsoft.Network/networkInterfaces@2025-07-01' = {
   name: 'nic-nsg-allow-all'
   location: location
   properties: {
