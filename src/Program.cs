@@ -80,20 +80,24 @@ app.Configure(config =>
     //     config.AddExample(new[] { "detectAnomalies", "--dimension", "ResourceId", "--recent-activity-days", "4" });
     //     config.AddExample(new[] { "costByTag", "--tag", "cost-center" });
 
-    // config.SetExceptionHandler((ex, resolver) =>
-    // {
-    //     // CommandRuntimeException wraps validation errors (e.g. ValidationResult.Error).
-    //     // Print only the message — the stack trace is internal Spectre machinery, not useful to the user.
-    //     if (ex is Spectre.Console.Cli.CommandRuntimeException)
-    //     {
-    //         Console.Error.WriteLine($"Error: {ex.Message}");
-    //     }
-    //     else
-    //     {
-    //         Console.Error.WriteLine(ex);
-    //     }
-    //     return -1;
-    // });
+    // Without an exception handler, Spectre.Console.Cli writes the exception to stdout
+    // and returns -1, which the shell reports as exit code 255. Write to stderr instead,
+    // so the error stays visible when stdout is redirected (e.g. >> $GITHUB_STEP_SUMMARY),
+    // and return 1 as a conventional failure exit code.
+    config.SetExceptionHandler((ex, resolver) =>
+    {
+        // CommandRuntimeException wraps validation errors (e.g. ValidationResult.Error).
+        // Print only the message — the stack trace is internal Spectre machinery, not useful to the user.
+        if (ex is Spectre.Console.Cli.CommandRuntimeException)
+        {
+            Console.Error.WriteLine($"Error: {ex.Message}");
+        }
+        else
+        {
+            Console.Error.WriteLine(ex);
+        }
+        return 1;
+    });
 
     //     config.AddCommand<AccumulatedCostCommand>("accumulatedCost")
     //         .WithDescription("Show the accumulated cost details.");
