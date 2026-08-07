@@ -72,6 +72,11 @@ app.Configure(config =>
     config.AddCommand<AzureSecurityAnalyzer.Commands.NetworkSecurityGroups.Command>("nsg")
        .WithDescription("Get the network security groups in the subscription.");
 
+    config.AddExample(["advisor"]);
+
+    config.AddCommand<AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Command>("advisor")
+       .WithDescription("Get the Azure Advisor recommendations for the subscription.");
+
     //         .WithDescription("Show the accumulated cost details.");
     //     config.AddExample(new[] { "accumulatedCost", "-o", "json" });
     //     config.AddExample(new[] { "costByResource", "-s", "00000000-0000-0000-0000-000000000000", "-o", "text" });
