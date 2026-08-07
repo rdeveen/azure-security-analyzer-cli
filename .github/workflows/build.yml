@@ -51,7 +51,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Test
-        working-directory: ./tests
+        working-directory: ../tests
         run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx" --logger "console;verbosity=detailed" --results-directory ./coverage
   
       - name: Generate coverage report
