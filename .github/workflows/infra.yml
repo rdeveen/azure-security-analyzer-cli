@@ -54,7 +54,7 @@ jobs:
         if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
         with:
           type: deploymentStack
-          operation: deploy
+          operation: create
           scope: resourceGroup
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: azure-security-analyzer-cli-rg
