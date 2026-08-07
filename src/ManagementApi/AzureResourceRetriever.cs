@@ -4,6 +4,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Core;
 using Azure.Identity;
+using AzureSecurityAnalyzer.Commands;
+using AzureSecurityAnalyzer.Commands.AdvisorRecommendations;
 using Spectre.Console;
 using Spectre.Console.Json;
 
@@ -16,7 +18,7 @@ public interface IAzureResourceRetriever
 
     Task<Subscription> RetrieveSubscription(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId);
-    Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId);
+    Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope? scope = null);
 }
 
 public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetriever
@@ -83,12 +85,21 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         return networkSecurityGroups;
     }
 
-    public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId)
+    public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope? scope = null)
     {
         var recommendations = new List<AdvisorRecommendation>();
 
+        var uriString = $"/subscriptions/{subscriptionId}/providers/Microsoft.Advisor/recommendations?api-version=2025-01-01";
+        uriString += "&$filter=Category eq 'Security'";
+
+        if (scope != null && scope.Name == "ResourceGroup")
+        {
+            var resourceGroup = scope.ScopePath.Split('/').Last();
+            uriString += $" and ResourceGroup eq '{resourceGroup}'";
+        }
+
         var uri = new Uri(
-            $"/subscriptions/{subscriptionId}/providers/Microsoft.Advisor/recommendations?api-version=2023-01-01",
+            uriString,
             UriKind.Relative);
 
         while (true)

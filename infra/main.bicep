@@ -3,6 +3,7 @@ targetScope = 'resourceGroup'
 @description('The location for all resources.')
 param location string = resourceGroup().location
 
+@description('This NSG has no security rules and is not associated with any NIC or Subnet.')
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: 'nsg-empty'
   location: location
@@ -11,6 +12,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   }
 }
 
+@description('This NSG has security rules that allow all inbound and outbound traffic and is not associated with any NIC or Subnet.')
 resource nsgWithAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: 'nsg-allow-all'
   location: location
@@ -46,6 +48,7 @@ resource nsgWithAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = 
   }
 }
 
+@description('This NSG has no security rules and is associated with a NIC.')
 resource nsgNicEmpty 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: 'nsg-nic-empty'
   location: location
@@ -54,6 +57,7 @@ resource nsgNicEmpty 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   }
 }
 
+@description('This NSG has security rules that allow all inbound and outbound traffic and is associated with a NIC.')
 resource nsgNicAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: 'nsg-nic-allow-all'
   location: location
@@ -89,6 +93,7 @@ resource nsgNicAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   }
 }
 
+@description('This NSG has no security rules and is associated with a Subnet.')
 resource nsgSubnetEmpty 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: 'nsg-subnet-empty'
   location: location
@@ -97,6 +102,7 @@ resource nsgSubnetEmpty 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   }
 }
 
+@description('This NSG has security rules that allow all inbound and outbound traffic and is associated with a Subnet.')
 resource nsgSubnetAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: 'nsg-subnet-allow-all'
   location: location
@@ -164,9 +170,15 @@ resource subnetNsgAllowAll 'Microsoft.Network/virtualNetworks/subnets@2023-05-01
       id: nsgSubnetAllowAll.id
     }
   }
-  dependsOn: [
-    subnetNsgEmpty
-  ]
+}
+
+@description('This subnet has no NSG associated with it which results in a Security recommendation from Azure Advisor.')
+resource subnetNsgNone 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = {
+  parent: vnetSecurityTest
+  name: 'subnet-nsg-none'
+  properties: {
+    addressPrefix: '10.0.3.0/24'
+  }
 }
 
 resource nicNsgEmpty 'Microsoft.Network/networkInterfaces@2023-05-01' = {

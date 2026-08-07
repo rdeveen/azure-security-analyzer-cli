@@ -59,8 +59,8 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
     {
         Console.WriteLine("# Advisor Recommendations");
         Console.WriteLine();
-        Console.WriteLine("|Category|Impact|Impacted Resource|Problem|Solution|Last Updated|");
-        Console.WriteLine("|---|---|---|---|---|---|");
+        Console.WriteLine("|Category|Impact|Impacted Resource|Problem|Solution|");
+        Console.WriteLine("|---|---|---|---|---|");
 
         foreach (var recommendation in recommendations
                      .OrderBy(r => r.Properties.Category)
@@ -72,8 +72,7 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
                 $"|{recommendation.Properties.Impact}" +
                 $"|{recommendation.Properties.ImpactedValue} ({recommendation.Properties.ImpactedField})" +
                 $"|{recommendation.Properties.ShortDescription?.Problem}" +
-                $"|{recommendation.Properties.ShortDescription?.Solution}" +
-                $"|{recommendation.Properties.LastUpdated?.ToString("yyyy-MM-dd")}|");
+                $"|{recommendation.Properties.ShortDescription?.Solution}|");
         }
 
         return Task.CompletedTask;

@@ -92,7 +92,6 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         table.AddColumn("Impacted Resource");
         table.AddColumn("Problem");
         table.AddColumn("Solution");
-        table.AddColumn("Last Updated");
 
         foreach (var recommendation in recommendations
                      .OrderBy(r => r.Properties.Category)
@@ -112,8 +111,7 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
                 new Markup(Markup.Escape(recommendation.Properties.ImpactedValue ?? string.Empty) +
                            $"\n[dim]({Markup.Escape(recommendation.Properties.ImpactedField ?? string.Empty)})[/]"),
                 new Markup(Markup.Escape(recommendation.Properties.ShortDescription?.Problem ?? string.Empty)),
-                new Markup(Markup.Escape(recommendation.Properties.ShortDescription?.Solution ?? string.Empty)),
-                new Markup(recommendation.Properties.LastUpdated?.ToString("yyyy-MM-dd") ?? string.Empty));
+                new Markup(Markup.Escape(recommendation.Properties.ShortDescription?.Solution ?? string.Empty)));
         }
 
         AnsiConsole.Write(table);

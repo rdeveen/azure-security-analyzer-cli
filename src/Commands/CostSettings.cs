@@ -15,10 +15,6 @@ public class CostSettings : LogCommandSettings, ICostSettings
     [Description("The subscription id to use. Will try to fetch the active id if not specified.")]
     public Guid? Subscription { get; set; }
 
-    [CommandOption("-g|--resource-group")]
-    [Description("The resource group to scope the request to. Need to be used in combination with the subscription id.")]
-    public string? ResourceGroup { get; set; }
-
     [CommandOption("-o|--output")]
     [Description("The output format to use. Defaults to Console (Console, Json, JsonC, Text, Markdown, Csv)")]
     public OutputFormat Output { get; set; } = OutputFormat.Console;
@@ -36,25 +32,13 @@ public class CostSettings : LogCommandSettings, ICostSettings
     [Description("Allows overriding the default HTTP timeout in seconds. Defaults to 100 seconds.")]
     public int HttpTimeout { get; set; } = 100;
 
-    [CommandOption("--fail-if-over")]
-    [Description("Fail with exit code 1 if total cost exceeds this amount. Useful for CI/CD cost gates. Not set by default.")]
-    public double? FailIfOver { get; set; }
-
-    public Scope GetScope
+    public virtual Scope GetScope
     {
         get
         {
-            if (Subscription != null && !string.IsNullOrWhiteSpace(ResourceGroup))
-            {
-                return Scope.ResourceGroup(Subscription.Value, ResourceGroup);
-            }
-            else // default to subscription
-            {
-                return Scope.Subscription(Subscription.GetValueOrDefault(Guid.Empty));
-            }
+            return Scope.Subscription(Subscription.GetValueOrDefault(Guid.Empty));
         }
     }
-
 }
 
 /// <summary>
@@ -75,9 +59,7 @@ public class Scope
 {
     public static Scope Subscription(Guid subscriptionId) => new("Subscription", "/subscriptions/" + subscriptionId, true);
     public static Scope ResourceGroup(Guid subscriptionId, string resourceGroup) => new("ResourceGroup", $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}", true);
-    public static Scope EnrollmentAccount(string billingAccountId, string enrollmentAccountId) => new("EnrollmentAccount", $"/providers/Microsoft.Billing/billingAccounts/{billingAccountId}/enrollmentAccounts/{enrollmentAccountId}", false);
-    public static Scope BillingAccount(string billingAccountId) => new("BillingAccount", $"/providers/Microsoft.Billing/billingAccounts/{billingAccountId}", false);
-
+  
     private Scope(string name, string path, bool isSubscriptionBased)
     {
         Name = name;

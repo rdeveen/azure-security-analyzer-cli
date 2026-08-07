@@ -28,7 +28,7 @@ public class Command(IAzureResourceRetriever azureResourceRetriever) : AsyncComm
         await AnsiConsoleExt.StatusAsync(settings.Quiet, "Fetching advisor recommendations...", async ctx =>
         {
             var recommendations = await azureResourceRetriever.RetrieveAdvisorRecommendations(
-                settings.Debug, settings.Subscription!.Value);
+                settings.Debug, settings.Subscription!.Value, settings.GetScope);
 
             // Write the output
             await outputFormatters[settings.Output]
