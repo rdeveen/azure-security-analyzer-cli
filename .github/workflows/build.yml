@@ -52,7 +52,7 @@ jobs:
 
       - name: Test
         working-directory: ../tests
-        run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx" --logger "console;verbosity=detailed" --results-directory ./coverage
+        run: dotnet test --verbosity normal --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx" --logger "console;verbosity=detailed" --results-directory ./coverage
   
       - name: Generate coverage report
         run: |
