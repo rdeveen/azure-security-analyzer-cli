@@ -1,7 +1,11 @@
 targetScope = 'resourceGroup'
 
+@description('The location for all resources.')
+param location string = resourceGroup().location
+
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: 'nsg-empty'
+  location: location
   properties: {
     securityRules: []
   }
@@ -9,6 +13,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
 
 resource nsgWithAllowAll 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: 'nsg-allow-all'
+  location: location
   properties: {
     securityRules: [
       {
