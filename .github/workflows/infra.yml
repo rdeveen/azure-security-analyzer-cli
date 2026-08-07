@@ -40,7 +40,7 @@ jobs:
           operation: validate
           scope: resourceGroup
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          resource-group-name: azure-security-analyzer-cli
+          resource-group-name: azure-security-analyzer-cli-rg
           location: westeurope
           template-file: infra/main.bicep
           name: azure-security-analyzer-cli-deployment
@@ -57,7 +57,7 @@ jobs:
           operation: deploy
           scope: resourceGroup
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          resource-group-name: azure-security-analyzer-cli
+          resource-group-name: azure-security-analyzer-cli-rg
           location: westeurope
           template-file: infra/main.bicep
           name: azure-security-analyzer-cli-deployment
