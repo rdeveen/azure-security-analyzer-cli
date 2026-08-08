@@ -1,3 +1,4 @@
+using AzureSecurityAnalyzer.Commands.NetworkSecurityGroups;
 using AzureSecurityAnalyzer.ManagementApi;
 using AzureSecurityAnalyzer.RegionsApi;
 using Spectre.Console;
@@ -34,7 +35,7 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
-    public override Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups)
+    public override Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups, IReadOnlyCollection<Commands.NetworkSecurityGroups.AnomalyDetectionResult> analysisResults)
     {
         var table = new Table();
         table.Border(TableBorder.Rounded);
@@ -76,6 +77,33 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
                 new Markup(nsg.Location),
                 new Markup(attachedSummary),
                 new Markup(ruleSummary));
+
+                var nsgAnalysisResults = analysisResults
+                    .Where(r => r.NetworkSecurityGroup.Id == nsg.Id)
+                    .ToList();
+
+  if (nsgAnalysisResults.Count > 0)
+                {
+                    var anomalyTable = new Table();
+                    anomalyTable.Border(TableBorder.Rounded);
+                    anomalyTable.AddColumn($"[red]{(nsgAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}[/]");
+                    anomalyTable.AddColumn($"Issue Description [dim]({nsgAnalysisResults.Count} issue{(nsgAnalysisResults.Count != 1 ? "s" : "")})[/]");
+
+                    foreach (var result in nsgAnalysisResults)
+                    {
+                        anomalyTable.AddRow(
+                            new Markup(result.Severity switch
+                            {
+                                SeverityLevel.High => "[red]High[/]",
+                                SeverityLevel.Medium => "[orange1]Medium[/]",
+                                SeverityLevel.Low => "[yellow]Low[/]",
+                                _ => "[dim]Unknown[/]"
+                            }),
+                            new Markup(result.IssueDescription)
+                        );
+                    }
+                    table.AddRow(new Markup(""), new Markup(""), new Markup(""), new Markup(""), anomalyTable);
+                }
         }
 
         AnsiConsole.Write(table);

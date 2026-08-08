@@ -30,11 +30,12 @@ public class Command(IAzureResourceRetriever azureResourceRetriever) : AsyncComm
             var networkSecurityGroups = await azureResourceRetriever.RetrieveNetworkSecurityGroups(
                 settings.Debug, settings.Subscription!.Value);
 
+            ctx.Status = $"Retrieved {networkSecurityGroups.Count} network security groups.";
+            var analysisResults = await Analyzer.Analyze(networkSecurityGroups);
+
             // Write the output
             await outputFormatters[settings.Output]
-                .WriteNetworkSecurityGroups(settings, networkSecurityGroups);
-
-            ctx.Status = $"Retrieved {networkSecurityGroups.Count} network security groups.";
+                .WriteNetworkSecurityGroups(settings, networkSecurityGroups, analysisResults);
         });
 
         return 0;

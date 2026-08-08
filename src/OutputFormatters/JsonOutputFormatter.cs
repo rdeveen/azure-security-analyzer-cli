@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using AzureSecurityAnalyzer.Commands;
 using AzureSecurityAnalyzer.ManagementApi;
 using AzureSecurityAnalyzer.RegionsApi;
@@ -15,10 +16,30 @@ public class JsonOutputFormatter : BaseOutputFormatter
 
         return Task.CompletedTask;
     }
-    
-    public override Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups)
+
+    public override Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups, IReadOnlyCollection<Commands.NetworkSecurityGroups.AnomalyDetectionResult> analysisResults)
     {
-        WriteJson(settings, networkSecurityGroups);
+        // Write the network security groups and their analysis results as JSON
+        // The analysis results are included in the output for each network security group
+        // Group the analysis results by network security group and include them in the output
+        // Remove the nsg from the analysis results to avoid duplication
+        
+        var output = networkSecurityGroups.Select(nsg =>
+        {
+            var nsgAnalysisResults = analysisResults.Where(r => r.NetworkSecurityGroup.Id == nsg.Id).ToList();
+
+            return new
+            {
+                NetworkSecurityGroup = nsg,
+                Anomalies = nsgAnalysisResults.Select(r => new
+                {
+                    r.IssueDescription,
+                    r.Severity
+                }).ToList()
+            };
+        }).ToList();
+
+        WriteJson(settings, output);
 
         return Task.CompletedTask;
     }
@@ -33,8 +54,9 @@ public class JsonOutputFormatter : BaseOutputFormatter
     private static void WriteJson(Commands.ICostSettings settings, object items)
     {
         var options = new JsonSerializerOptions { WriteIndented = true };
-        
-        var json = JsonSerializer.Serialize(items, options );
+        options.Converters.Add(new JsonStringEnumConverter());
+
+        var json = JsonSerializer.Serialize(items, options);
 
         switch (settings.Output)
         {

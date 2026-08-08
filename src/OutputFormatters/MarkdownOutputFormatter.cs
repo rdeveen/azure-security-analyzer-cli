@@ -21,7 +21,7 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
-    public override Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups)
+    public override Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups, IReadOnlyCollection<Commands.NetworkSecurityGroups.AnomalyDetectionResult> analysisResults)
     {
         Console.WriteLine("# Network Security Groups");
         Console.WriteLine();
@@ -48,6 +48,13 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
                              $"{r.Properties.GetValue(r.Properties.SourcePortRange, r.Properties.SourcePortRanges)} -> " +
                              $"{r.Properties.GetValue(r.Properties.DestinationAddressPrefix, r.Properties.DestinationAddressPrefixes)}:" +
                              $"{r.Properties.GetValue(r.Properties.DestinationPortRange, r.Properties.DestinationPortRanges)} ({r.Name})"));
+
+            if (analysisResults.Any(r => r.NetworkSecurityGroup.Id == nsg.Id))
+            {
+                var nsgAnalysisResults = analysisResults.Where(r => r.NetworkSecurityGroup.Id == nsg.Id).ToList();
+
+                ruleSummary += $"<br><br>**{(nsgAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}**<br>{string.Join("<br>", nsgAnalysisResults.Select(r => $"- {r.IssueDescription} ({r.Severity})"))}";
+            }
 
             Console.WriteLine($"|{nsg.Name}|{nsg.GetResourceGroupName()}|{nsg.Location}|{attachedSummary}|{ruleSummary}|");
         }

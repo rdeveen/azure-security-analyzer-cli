@@ -231,7 +231,6 @@ public record NetworkSecurityGroup(
     string Name,
     string Type,
     string Location,
-    string? Etag,
     Dictionary<string, string>? Tags,
     NetworkSecurityGroupProperties Properties
 );
@@ -242,14 +241,12 @@ public record NetworkSecurityGroupProperties(
     SecurityRule[]? SecurityRules,
     SecurityRule[]? DefaultSecurityRules,
     ResourceReference[]? NetworkInterfaces,
-    ResourceReference[]? Subnets,
-    bool? FlushConnection
+    ResourceReference[]? Subnets
 );
 
 public record SecurityRule(
     string Id,
     string Name,
-    string? Etag,
     string? Type,
     SecurityRuleProperties Properties
 );
