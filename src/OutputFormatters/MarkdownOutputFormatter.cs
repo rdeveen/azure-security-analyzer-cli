@@ -98,4 +98,26 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
 
         return Task.CompletedTask;
     }
+
+    public override Task WriteSecurityPolicies(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<SecurityPricing> pricings)
+    {
+        if (pricings.Count == 0)
+        {
+            Console.WriteLine("No security policies found.");
+
+            return Task.CompletedTask;
+        }
+
+        Console.WriteLine("# Security Policies");
+        Console.WriteLine();
+        Console.WriteLine("|Plan|Pricing Tier|Sub Plan|");
+        Console.WriteLine("|---|---|---|");
+
+        foreach (var pricing in pricings.OrderBy(p => p.Name))
+        {
+            Console.WriteLine($"|{pricing.Name}|{pricing.Properties.PricingTier}|{pricing.Properties.SubPlan}|");
+        }
+
+        return Task.CompletedTask;
+    }
 }

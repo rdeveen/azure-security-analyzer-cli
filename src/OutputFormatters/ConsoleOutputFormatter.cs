@@ -160,4 +160,34 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
 
         return Task.CompletedTask;
     }
+
+    public override Task WriteSecurityPolicies(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<SecurityPricing> pricings)
+    {
+        if (pricings.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[yellow]No security policies found.[/]");
+
+            return Task.CompletedTask;
+        }
+
+        var table = new Table();
+        table.Border(TableBorder.Rounded);
+        table.AddColumn("Plan");
+        table.AddColumn("Pricing Tier");
+        table.AddColumn("Sub Plan");
+
+        foreach (var pricing in pricings.OrderBy(p => p.Name))
+        {
+            var tierColor = pricing.Properties.PricingTier == "Standard" ? "[green]" : "[dim]";
+
+            table.AddRow(
+                new Markup(pricing.Name),
+                new Markup($"{tierColor}{pricing.Properties.PricingTier}[/]"),
+                new Markup(pricing.Properties.SubPlan ?? string.Empty));
+        }
+
+        AnsiConsole.Write(table);
+
+        return Task.CompletedTask;
+    }
 }
