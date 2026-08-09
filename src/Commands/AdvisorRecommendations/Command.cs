@@ -30,11 +30,18 @@ public class Command(IAzureResourceRetriever azureResourceRetriever) : AsyncComm
             var recommendations = await azureResourceRetriever.RetrieveAdvisorRecommendations(
                 settings.Debug, settings.Subscription!.Value, settings.GetScope);
 
+            ctx.Status = $"Retrieved {recommendations.Count} advisor recommendations.";
+
+            ctx.Status = "Fetching Microsoft Defender for Cloud recommendations...";
+
+            var defenderRecommendations = await azureResourceRetriever.RetrieveDefenderForCloudRecommendations(
+                settings.Debug, settings.Subscription!.Value, settings.GetScope);
+
+            ctx.Status = $"Retrieved {defenderRecommendations.Count} Microsoft Defender for Cloud recommendations.";
+
             // Write the output
             await outputFormatters[settings.Output]
-                .WriteAdvisorRecommendations(settings, recommendations);
-
-            ctx.Status = $"Retrieved {recommendations.Count} advisor recommendations.";
+                .WriteAdvisorRecommendations(settings, [.. recommendations, .. defenderRecommendations]);            
         });
 
         return 0;

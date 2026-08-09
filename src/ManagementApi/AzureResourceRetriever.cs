@@ -18,7 +18,11 @@ public interface IAzureResourceRetriever
 
     Task<Subscription> RetrieveSubscription(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId);
-    Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope? scope = null);
+    Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
+
+    Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
+    Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudSecurityPolicies(bool includeDebugOutput, Guid subscriptionId);
+    // Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudSecurityScore(bool includeDebugOutput, Guid subscriptionId);
 }
 
 public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetriever
@@ -85,14 +89,14 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         return networkSecurityGroups;
     }
 
-    public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope? scope = null)
+    public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope)
     {
         var recommendations = new List<AdvisorRecommendation>();
 
         var uriString = $"/subscriptions/{subscriptionId}/providers/Microsoft.Advisor/recommendations?api-version=2025-01-01";
         uriString += "&$filter=Category eq 'Security'";
 
-        if (scope != null && scope.Name == "ResourceGroup")
+        if (scope.Name == "ResourceGroup")
         {
             var resourceGroup = scope.ScopePath.Split('/').Last();
             uriString += $" and ResourceGroup eq '{resourceGroup}'";
@@ -104,7 +108,7 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
 
         while (true)
         {
-            var content = await ExecuteTypedCallToManagementApi<AdvisorRecommendationListResult>(includeDebugOutput, null, uri);
+            var content = await ExecuteTypedCallToManagementApi<AdvisorRecommendationList>(includeDebugOutput, null, uri);
 
             if (content?.Value is { Length: > 0 })
             {
@@ -209,6 +213,59 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
 
         tokenRetrieved = true;
     }
+
+    public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope = null)
+    {
+        var recommendations = new List<AdvisorRecommendation>();
+        
+        var uri = new Uri(
+            $"{scope.ScopePath}/providers/Microsoft.Security/assessments?api-version=2020-01-01&expand=metadata&$filter=properties/status/code eq 'Unhealthy'",
+            UriKind.Relative);
+
+        var result = await ExecuteTypedCallToManagementApi<SecurityAssessmentList>(includeDebugOutput, null, uri);
+        
+        if (result?.Value is { Length: > 0 })
+        {
+            var filteredRecommendations = result.Value
+                .Where(r => r.Properties.Status.Code.Equals("Unhealthy", StringComparison.OrdinalIgnoreCase))
+                .Select(static r => new AdvisorRecommendation(
+                    Id: r.Id,
+                    Name: r.Name,
+                    Type: r.Type,
+                    Properties: new AdvisorRecommendationProperties(
+                        Category: r.Properties.Metadata?.Categories?.Any() == true ? string.Join(", ", r.Properties.Metadata.Categories) : "Security",
+                        Impact: r.Properties.Metadata?.Severity ?? "Medium",
+                        ImpactedField: null,
+                        ImpactedValue: r.Properties.ResourceDetails.Id,
+                        LastUpdated: null,
+                        RecommendationTypeId: null,
+                        ShortDescription: new AdvisorShortDescription(
+                            Problem: r.Properties.DisplayName,
+                            Solution: r.Properties.Metadata?.RemediationDescription),
+                        ResourceMetadata: new AdvisorResourceMetadata(
+                            ResourceId: r.Properties.ResourceDetails.Id,
+                            Source: r.Properties.ResourceDetails.Source),
+                        SuppressionIds: null
+                    )
+                ));
+            recommendations.AddRange(filteredRecommendations);
+        }
+
+        if (includeDebugOutput)
+        {
+            var json = JsonSerializer.Serialize(recommendations, jsonSerializerOptions);
+            AnsiConsole.WriteLine($"Retrieved {recommendations.Count} Defender for Cloud recommendations:");
+            AnsiConsole.Write(new JsonText(json));
+            AnsiConsole.WriteLine();
+        }
+
+        return recommendations;
+    }
+
+    public Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudSecurityPolicies(bool includeDebugOutput, Guid subscriptionId)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public record Subscription(
@@ -270,7 +327,7 @@ public record SecurityRuleProperties(
 
 public record ResourceReference(string Id);
 
-public record AdvisorRecommendationListResult(
+public record AdvisorRecommendationList(
     AdvisorRecommendation[] Value,
     string? NextLink
 );
@@ -302,4 +359,42 @@ public record AdvisorShortDescription(
 public record AdvisorResourceMetadata(
     string? ResourceId,
     string? Source
+);
+
+public record SecurityAssessmentList(
+    SecurityAssessment[] Value,
+    string? NextLink
+);
+
+public record SecurityAssessment(
+    string Id,
+    string Name,
+    string Type,
+    SecurityAssessmentProperties Properties
+);
+
+public record SecurityAssessmentProperties(
+    string DisplayName,
+    AssessmentStatus Status,
+    AzureResourceDetails ResourceDetails,
+    SecurityAssessmentMetadataProperties? Metadata
+);
+
+public record AssessmentStatus(
+    string Code,
+    string? Cause,
+    string? Description
+);
+
+public record SecurityAssessmentMetadataProperties(
+    string DisplayName,
+    string? Description,
+    string? RemediationDescription,
+    string? Severity,
+    string[]? Categories
+);
+
+public record AzureResourceDetails(
+    string Id,
+    string Source
 );

@@ -6,6 +6,7 @@ using AzureSecurityAnalyzer.OutputFormatters;
 using Shouldly;
 using Moq;
 using Spectre.Console.Cli;
+using AzureSecurityAnalyzer.Commands;
 
 namespace AzureSecurityAnalyzer.Tests.Commands.AdvisorRecommendations;
 
@@ -42,20 +43,44 @@ public class CommandTests
     }
 
     [Fact]
+    public void AdvisorRecommendationsSettings_WithResourceGroup_GetScopeReturnsResourceGroupScope()
+    {
+        // Arrange
+        var subscriptionId = Guid.NewGuid();
+        var settings = new Settings
+        {
+            Subscription = subscriptionId,
+            ResourceGroup = "azure-security-analyzer-cli-rg"
+        };
+
+        // Act
+        var scope = settings.GetScope;
+
+        // Assert
+        scope.Name.ShouldBe("ResourceGroup");
+        scope.ScopePath.ShouldBe($"/subscriptions/{subscriptionId}/resourceGroups/azure-security-analyzer-cli-rg");
+        scope.IsSubscriptionBased.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task ExecuteAsync_CallsResourceRetriever_Once()
     {
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([CreateRecommendation()]);
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
+            .ReturnsAsync([]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
         // Act
         await ExecuteAsync(settings);
 
         // Assert
-        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
     }
 
     [Fact]
@@ -64,7 +89,10 @@ public class CommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
+            .ReturnsAsync([]);
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([]);
         var settings = new Settings
         {
@@ -83,13 +111,43 @@ public class CommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_WithResourceGroupScope_CallsRetrieversWithResourceGroupScope()
+    {
+        // Arrange
+        var subscriptionId = Guid.NewGuid();
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesResourceGroupScope(subscriptionId, "azure-security-analyzer-cli-rg")))
+            .ReturnsAsync([CreateRecommendation()]);
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesResourceGroupScope(subscriptionId, "azure-security-analyzer-cli-rg")))
+            .ReturnsAsync([]);
+        var settings = new Settings
+        {
+            Quiet = true,
+            Subscription = subscriptionId,
+            ResourceGroup = "azure-security-analyzer-cli-rg"
+        };
+
+        // Act
+        var result = await ExecuteAsync(settings);
+
+        // Assert
+        result.ShouldBe(0);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesResourceGroupScope(subscriptionId, "azure-security-analyzer-cli-rg")), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesResourceGroupScope(subscriptionId, "azure-security-analyzer-cli-rg")), Times.Once);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_WithRecommendations_ReturnsZero()
     {
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([CreateRecommendation(), CreateRecommendation(category: "Cost", impact: "Medium")]);
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
+            .ReturnsAsync([]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
         // Act
@@ -105,7 +163,10 @@ public class CommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
+            .ReturnsAsync([]);
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -114,7 +175,8 @@ public class CommandTests
 
         // Assert
         result.ShouldBe(0);
-        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
     }
 
     [Theory]
@@ -127,8 +189,11 @@ public class CommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([CreateRecommendation()]);
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
+            .ReturnsAsync([]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId, Output = outputFormat };
 
         // Act
@@ -136,7 +201,8 @@ public class CommandTests
 
         // Assert
         result.ShouldBe(0);
-        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
     }
 
     [Fact]
@@ -159,8 +225,11 @@ public class CommandTests
                 ResourceMetadata: null,
                 SuppressionIds: null));
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([recommendation]);
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
+            .ReturnsAsync([]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
         // Act
@@ -176,7 +245,7 @@ public class CommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ThrowsAsync(new HttpRequestException("API unavailable"));
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -203,6 +272,16 @@ public class CommandTests
     {
         return ((ICommand<Settings>)command).ExecuteAsync(CreateCommandContext(), settings, CancellationToken.None);
     }
+
+    private static Scope MatchesSubscriptionScope(Guid subscriptionId) => It.Is<Scope>(scope =>
+        scope.Name == "Subscription"
+        && scope.ScopePath == $"/subscriptions/{subscriptionId}"
+        && scope.IsSubscriptionBased);
+
+    private static Scope MatchesResourceGroupScope(Guid subscriptionId, string resourceGroup) => It.Is<Scope>(scope =>
+        scope.Name == "ResourceGroup"
+        && scope.ScopePath == $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}"
+        && scope.IsSubscriptionBased);
 
     private static AdvisorRecommendation CreateRecommendation(string category = "Security", string impact = "High") => new(
         Id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg1/providers/Microsoft.Advisor/recommendations/rec1",
