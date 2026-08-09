@@ -15,7 +15,7 @@ public class CommandTests
 
     public CommandTests()
     {
-        mockRegionsRetriever = new Mock<IRegionsRetriever>();
+        mockRegionsRetriever = new Mock<IRegionsRetriever>(MockBehavior.Strict);
         command = new Command(mockRegionsRetriever.Object);
     }
 

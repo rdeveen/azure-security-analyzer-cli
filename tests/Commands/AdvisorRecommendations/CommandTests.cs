@@ -16,7 +16,8 @@ public class CommandTests
 
     public CommandTests()
     {
-        mockAzureResourceRetriever = new Mock<IAzureResourceRetriever>();
+        mockAzureResourceRetriever = new Mock<IAzureResourceRetriever>(MockBehavior.Strict);
+        mockAzureResourceRetriever.SetupAllProperties();
         command = new Command(mockAzureResourceRetriever.Object);
     }
 
@@ -46,7 +47,7 @@ public class CommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
             .ReturnsAsync([CreateRecommendation()]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -54,7 +55,7 @@ public class CommandTests
         await ExecuteAsync(settings);
 
         // Assert
-        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()), Times.Once);
     }
 
     [Fact]
@@ -63,7 +64,7 @@ public class CommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
             .ReturnsAsync([]);
         var settings = new Settings
         {
@@ -87,7 +88,7 @@ public class CommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
             .ReturnsAsync([CreateRecommendation(), CreateRecommendation(category: "Cost", impact: "Medium")]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -104,7 +105,7 @@ public class CommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
             .ReturnsAsync([]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -113,7 +114,7 @@ public class CommandTests
 
         // Assert
         result.ShouldBe(0);
-        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()), Times.Once);
     }
 
     [Theory]
@@ -126,7 +127,7 @@ public class CommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
             .ReturnsAsync([CreateRecommendation()]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId, Output = outputFormat };
 
@@ -135,7 +136,7 @@ public class CommandTests
 
         // Assert
         result.ShouldBe(0);
-        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()), Times.Once);
     }
 
     [Fact]
@@ -158,7 +159,7 @@ public class CommandTests
                 ResourceMetadata: null,
                 SuppressionIds: null));
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
             .ReturnsAsync([recommendation]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -175,7 +176,7 @@ public class CommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, It.IsAny<AzureSecurityAnalyzer.Commands.Scope>()))
             .ThrowsAsync(new HttpRequestException("API unavailable"));
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
