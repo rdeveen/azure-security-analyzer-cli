@@ -49,7 +49,7 @@ public class CommandTests
         var settings = new Settings { Quiet = true };
 
         // Act
-        await ExecuteAsync(settings);
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
         mockRegionsRetriever.Verify(r => r.RetrieveRegions(), Times.Once);
@@ -65,7 +65,7 @@ public class CommandTests
         var settings = new Settings { Quiet = true };
 
         // Act
-        var result = await ExecuteAsync(settings);
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
         result.ShouldBe(0);
@@ -81,7 +81,7 @@ public class CommandTests
         var settings = new Settings { Quiet = true };
 
         // Act
-        var result = await ExecuteAsync(settings);
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
         result.ShouldBe(0);

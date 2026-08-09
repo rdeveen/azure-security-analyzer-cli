@@ -78,7 +78,7 @@ public class CommandTests
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
         // Act
-        await ExecuteAsync(settings);
+        await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
         mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
@@ -105,7 +105,7 @@ public class CommandTests
         };
 
         // Act
-        await ExecuteAsync(settings);
+        await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
         mockAzureResourceRetriever.VerifySet(r => r.ManagementApiAddress = "https://management.example.com/", Times.Once);
@@ -131,7 +131,7 @@ public class CommandTests
         };
 
         // Act
-        var result = await ExecuteAsync(settings);
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
         result.ShouldBe(0);
@@ -153,7 +153,7 @@ public class CommandTests
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
         // Act
-        var result = await ExecuteAsync(settings);
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
         result.ShouldBe(0);
@@ -173,7 +173,7 @@ public class CommandTests
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
         // Act
-        var result = await ExecuteAsync(settings);
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
         result.ShouldBe(0);
@@ -235,7 +235,7 @@ public class CommandTests
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
         // Act
-        var result = await ExecuteAsync(settings);
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
         result.ShouldBe(0);
