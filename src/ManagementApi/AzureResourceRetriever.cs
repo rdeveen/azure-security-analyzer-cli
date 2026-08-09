@@ -22,7 +22,6 @@ public interface IAzureResourceRetriever
 
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudSecurityPolicies(bool includeDebugOutput, Guid subscriptionId);
-    // Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudSecurityScore(bool includeDebugOutput, Guid subscriptionId);
 }
 
 public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetriever
