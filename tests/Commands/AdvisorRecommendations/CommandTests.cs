@@ -16,7 +16,8 @@ public class CommandTests
 
     public CommandTests()
     {
-        mockAzureResourceRetriever = new Mock<IAzureResourceRetriever>();
+        mockAzureResourceRetriever = new Mock<IAzureResourceRetriever>(MockBehavior.Strict);
+        mockAzureResourceRetriever.SetupAllProperties();
         command = new Command(mockAzureResourceRetriever.Object);
     }
 
