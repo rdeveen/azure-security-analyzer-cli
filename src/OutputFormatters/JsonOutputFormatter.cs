@@ -51,6 +51,13 @@ public class JsonOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteSecurityPolicies(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<SecurityPricing> pricings)
+    {
+        WriteJson(settings, pricings);
+
+        return Task.CompletedTask;
+    }
+
     private static void WriteJson(Commands.ICostSettings settings, object items)
     {
         var options = new JsonSerializerOptions { WriteIndented = true };

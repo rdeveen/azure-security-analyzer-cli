@@ -10,4 +10,6 @@ public abstract class BaseOutputFormatter
     public abstract Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups, IReadOnlyCollection<Commands.NetworkSecurityGroups.AnomalyDetectionResult> analysisResults);
 
     public abstract Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations);
+
+    public abstract Task WriteSecurityPolicies(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<SecurityPricing> pricings);
 }
