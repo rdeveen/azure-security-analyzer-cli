@@ -4,10 +4,12 @@ using AzureSecurityAnalyzer.RegionsApi;
 
 using Shouldly;
 using Moq;
+using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace AzureSecurityAnalyzer.Tests.Commands.Regions;
 
+[Collection("ConsoleOutputTests")]
 public class CommandTests
 {
     private readonly Mock<IRegionsRetriever> mockRegionsRetriever;
@@ -100,11 +102,33 @@ public class CommandTests
         var settings = new Settings { Quiet = true, Output = outputFormat };
 
         // Act
-        var result = await ExecuteAsync(settings);
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
         result.ShouldBe(0);
         mockRegionsRetriever.Verify(r => r.RetrieveRegions(), Times.Once);
+    }
+
+    private static async Task<T> CaptureAnsiConsoleOutput<T>(Func<Task<T>> action)
+    {
+        var originalConsole = AnsiConsole.Console;
+        using var writer = new StringWriter();
+        AnsiConsole.Console = AnsiConsole.Create(new AnsiConsoleSettings
+        {
+            Ansi = AnsiSupport.No,
+            ColorSystem = ColorSystemSupport.NoColors,
+            Interactive = InteractionSupport.No,
+            Out = new AnsiConsoleOutput(writer)
+        });
+
+        try
+        {
+            return await action();
+        }
+        finally
+        {
+            AnsiConsole.Console = originalConsole;
+        }
     }
 
     [Fact]

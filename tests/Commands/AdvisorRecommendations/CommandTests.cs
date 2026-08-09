@@ -5,11 +5,13 @@ using AzureSecurityAnalyzer.OutputFormatters;
 
 using Shouldly;
 using Moq;
+using Spectre.Console;
 using Spectre.Console.Cli;
 using AzureSecurityAnalyzer.Commands;
 
 namespace AzureSecurityAnalyzer.Tests.Commands.AdvisorRecommendations;
 
+[Collection("ConsoleOutputTests")]
 public class CommandTests
 {
     private readonly Mock<IAzureResourceRetriever> mockAzureResourceRetriever;
@@ -197,7 +199,7 @@ public class CommandTests
         var settings = new Settings { Quiet = true, Subscription = subscriptionId, Output = outputFormat };
 
         // Act
-        var result = await ExecuteAsync(settings);
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
         result.ShouldBe(0);
@@ -271,6 +273,28 @@ public class CommandTests
     private Task<int> ExecuteAsync(Settings settings)
     {
         return ((ICommand<Settings>)command).ExecuteAsync(CreateCommandContext(), settings, CancellationToken.None);
+    }
+
+    private static async Task<T> CaptureAnsiConsoleOutput<T>(Func<Task<T>> action)
+    {
+        var originalConsole = AnsiConsole.Console;
+        using var writer = new StringWriter();
+        AnsiConsole.Console = AnsiConsole.Create(new AnsiConsoleSettings
+        {
+            Ansi = AnsiSupport.No,
+            ColorSystem = ColorSystemSupport.NoColors,
+            Interactive = InteractionSupport.No,
+            Out = new AnsiConsoleOutput(writer)
+        });
+
+        try
+        {
+            return await action();
+        }
+        finally
+        {
+            AnsiConsole.Console = originalConsole;
+        }
     }
 
     private static Scope MatchesSubscriptionScope(Guid subscriptionId) => It.Is<Scope>(scope =>

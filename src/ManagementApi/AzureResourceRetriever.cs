@@ -213,7 +213,7 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         tokenRetrieved = true;
     }
 
-    public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope = null)
+    public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope)
     {
         var recommendations = new List<AdvisorRecommendation>();
         
