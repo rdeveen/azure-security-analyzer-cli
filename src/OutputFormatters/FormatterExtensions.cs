@@ -46,6 +46,19 @@ public static class FormatterExtensions
         }
     }
 
+    extension(AzureResourceDetails resourceDetails)
+    {
+        public string GetResourceType()
+        {
+            return GetSegmentValue(resourceDetails.Id, "providers");
+        }
+
+        public string GetResourceName()
+        {
+            return GetSegmentValue(resourceDetails.Id, GetSegmentValue(resourceDetails.Id, "providers"));
+        }
+    }
+
     private static IEnumerable<string> GetNames(ResourceReference[] references, string segmentName, string label)
     {
         return references

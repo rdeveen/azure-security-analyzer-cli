@@ -5,7 +5,7 @@ using Spectre.Console;
 
 namespace AzureSecurityAnalyzer.Tests.OutputFormatters;
 
-[Collection("ConsoleOutput")]
+[Collection("ConsoleOutputTests")]
 public class ConsoleOutputFormatterTests
 {
     private readonly ConsoleOutputFormatter formatter = new();

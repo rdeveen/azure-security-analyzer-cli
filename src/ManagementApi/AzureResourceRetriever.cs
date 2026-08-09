@@ -6,6 +6,7 @@ using Azure.Core;
 using Azure.Identity;
 using AzureSecurityAnalyzer.Commands;
 using AzureSecurityAnalyzer.Commands.AdvisorRecommendations;
+using AzureSecurityAnalyzer.OutputFormatters;
 using Spectre.Console;
 using Spectre.Console.Json;
 
@@ -218,7 +219,7 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         var recommendations = new List<AdvisorRecommendation>();
         
         var uri = new Uri(
-            $"{scope.ScopePath}/providers/Microsoft.Security/assessments?api-version=2020-01-01&expand=metadata&$filter=properties/status/code eq 'Unhealthy'",
+            $"{scope.ScopePath}/providers/Microsoft.Security/assessments?api-version=2020-01-01&expand=metadata",
             UriKind.Relative);
 
         var result = await ExecuteTypedCallToManagementApi<SecurityAssessmentList>(includeDebugOutput, null, uri);
@@ -234,7 +235,7 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
                     Properties: new AdvisorRecommendationProperties(
                         Category: r.Properties.Metadata?.Categories?.Any() == true ? string.Join(", ", r.Properties.Metadata.Categories) : "Security",
                         Impact: r.Properties.Metadata?.Severity ?? "Medium",
-                        ImpactedField: null,
+                        ImpactedField: r.Properties.ResourceDetails.GetResourceType() + "/" + r.Properties.ResourceDetails.GetResourceName(),
                         ImpactedValue: r.Properties.ResourceDetails.Id,
                         LastUpdated: null,
                         RecommendationTypeId: null,

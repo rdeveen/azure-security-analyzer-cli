@@ -5,7 +5,7 @@ using Shouldly;
 
 namespace AzureSecurityAnalyzer.Tests.OutputFormatters;
 
-[Collection("ConsoleOutput")]
+[Collection("ConsoleOutputTests")]
 public class MarkdownOutputFormatterTests
 {
     private readonly MarkdownOutputFormatter formatter = new();
