@@ -41,7 +41,7 @@ public class Command(IAzureResourceRetriever azureResourceRetriever) : AsyncComm
 
             ctx.Status = "Fetching Microsoft Defender for Cloud security policies...";
 
-            var securityPolicies = await azureResourceRetriever.RetrieveDefenderForCloudSecurityPolicies(
+            var securityPolicies = await azureResourceRetriever.RetrieveDefenderForCloudSecurityPricings(
                 settings.Debug, settings.Subscription!.Value);
 
             ctx.Status = $"Retrieved {securityPolicies.Count} Microsoft Defender for Cloud security policies.";

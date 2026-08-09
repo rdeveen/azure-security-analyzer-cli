@@ -21,7 +21,7 @@ public interface IAzureResourceRetriever
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
 
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
-    Task<IReadOnlyCollection<SecurityPricing>> RetrieveDefenderForCloudSecurityPolicies(bool includeDebugOutput, Guid subscriptionId);
+    Task<IReadOnlyCollection<SecurityPricing>> RetrieveDefenderForCloudSecurityPricings(bool includeDebugOutput, Guid subscriptionId);
     // Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudSecurityScore(bool includeDebugOutput, Guid subscriptionId);
 }
 
@@ -217,13 +217,13 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
     public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope = null)
     {
         var recommendations = new List<AdvisorRecommendation>();
-        
+
         var uri = new Uri(
             $"{scope.ScopePath}/providers/Microsoft.Security/assessments?api-version=2020-01-01&expand=metadata&$filter=properties/status/code eq 'Unhealthy'",
             UriKind.Relative);
 
         var result = await ExecuteTypedCallToManagementApi<SecurityAssessmentList>(includeDebugOutput, null, uri);
-        
+
         if (result?.Value is { Length: > 0 })
         {
             var filteredRecommendations = result.Value
@@ -262,7 +262,14 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         return recommendations;
     }
 
-    public async Task<IReadOnlyCollection<SecurityPricing>> RetrieveDefenderForCloudSecurityPolicies(bool includeDebugOutput, Guid subscriptionId)
+    /// <summary>
+    /// Retrieves the Microsoft Defender for Cloud security policies (pricings) for the specified subscription. 
+    /// The pricings are named Defender plans in the Azure portal, but the API still uses the term "pricings".
+    /// </summary>
+    /// <param name="includeDebugOutput">Whether to include debug output.</param>
+    /// <param name="subscriptionId">The subscription ID.</param>
+    /// <returns>A collection of Defender for Cloud security pricings.</returns>
+    public async Task<IReadOnlyCollection<SecurityPricing>> RetrieveDefenderForCloudSecurityPricings(bool includeDebugOutput, Guid subscriptionId)
     {
         var uri = new Uri(
             $"/subscriptions/{subscriptionId}/providers/Microsoft.Security/pricings?api-version=2022-03-01",
@@ -431,5 +438,5 @@ public record SecurityPricingProperties(
     string PricingTier,
     string? SubPlan,
     string? FreeTrialRemainingTime,
-    string? Deprecated
+    bool? Deprecated
 );

@@ -74,7 +74,7 @@ public class CommandTests
             .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([]);
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId))
             .ReturnsAsync([]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -84,7 +84,7 @@ public class CommandTests
         // Assert
         mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
         mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
-        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId), Times.Once);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class CommandTests
             .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([]);
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId))
             .ReturnsAsync([]);
         var settings = new Settings
         {
@@ -129,7 +129,7 @@ public class CommandTests
             .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesResourceGroupScope(subscriptionId, "azure-security-analyzer-cli-rg")))
             .ReturnsAsync([]);
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId))
             .ReturnsAsync([]);
         var settings = new Settings
         {
@@ -145,7 +145,7 @@ public class CommandTests
         result.ShouldBe(0);
         mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesResourceGroupScope(subscriptionId, "azure-security-analyzer-cli-rg")), Times.Once);
         mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesResourceGroupScope(subscriptionId, "azure-security-analyzer-cli-rg")), Times.Once);
-        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId), Times.Once);
     }
 
     [Fact]
@@ -160,7 +160,7 @@ public class CommandTests
             .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([]);
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId))
             .ReturnsAsync([]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -183,7 +183,7 @@ public class CommandTests
             .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([]);
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId))
             .ReturnsAsync([]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -194,7 +194,7 @@ public class CommandTests
         result.ShouldBe(0);
         mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
         mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
-        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId), Times.Once);
     }
 
     [Theory]
@@ -213,7 +213,7 @@ public class CommandTests
             .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([]);
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId))
             .ReturnsAsync([CreateSecurityPricing()]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId, Output = outputFormat };
 
@@ -224,7 +224,7 @@ public class CommandTests
         result.ShouldBe(0);
         mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
         mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
-        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId), Times.Once);
     }
 
     [Fact]
@@ -253,7 +253,7 @@ public class CommandTests
             .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([]);
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId))
             .ReturnsAsync([]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -291,7 +291,7 @@ public class CommandTests
             .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([]);
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId))
             .ReturnsAsync([CreateSecurityPricing(), CreateSecurityPricing(name: "StorageAccounts", pricingTier: "Free")]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -300,7 +300,7 @@ public class CommandTests
 
         // Assert
         result.ShouldBe(0);
-        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId), Times.Once);
     }
 
     [Fact]
@@ -315,7 +315,7 @@ public class CommandTests
             .Setup(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)))
             .ReturnsAsync([]);
         mockAzureResourceRetriever
-            .Setup(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId))
+            .Setup(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId))
             .ReturnsAsync([]);
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
@@ -324,7 +324,7 @@ public class CommandTests
 
         // Assert
         result.ShouldBe(0);
-        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPolicies(It.IsAny<bool>(), subscriptionId), Times.Once);
+        mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudSecurityPricings(It.IsAny<bool>(), subscriptionId), Times.Once);
     }
 
     [Theory]
