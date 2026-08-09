@@ -23,6 +23,13 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
 
     public override Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups, IReadOnlyCollection<Commands.NetworkSecurityGroups.AnomalyDetectionResult> analysisResults)
     {
+        if (networkSecurityGroups.Count == 0)
+        {
+            Console.WriteLine("No network security groups found.");
+
+            return Task.CompletedTask;
+        }
+
         Console.WriteLine("# Network Security Groups");
         Console.WriteLine();
         Console.WriteLine("|Name|Resource Group|Location|Attached|Security Rules (Priority Access Direction Protocol Source:Port -> Destination:Port)|");
@@ -64,6 +71,13 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
 
     public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
     {
+        if (recommendations.Count == 0)
+        {
+            Console.WriteLine("No recommendations found.");
+
+            return Task.CompletedTask;
+        }
+
         Console.WriteLine("# Advisor Recommendations");
         Console.WriteLine();
         Console.WriteLine("|Category|Impact|Impacted Resource|Problem|Solution|");
