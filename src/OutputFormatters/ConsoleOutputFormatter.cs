@@ -37,6 +37,13 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
 
     public override Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups, IReadOnlyCollection<Commands.NetworkSecurityGroups.AnomalyDetectionResult> analysisResults)
     {
+        if (networkSecurityGroups.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[yellow]No network security groups found.[/]");
+
+            return Task.CompletedTask;
+        }
+
         var table = new Table();
         table.Border(TableBorder.Rounded);
         table.AddColumn("Name");
@@ -113,6 +120,13 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
 
     public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
     {
+        if (recommendations.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[yellow]No recommendations found.[/]");
+
+            return Task.CompletedTask;
+        }
+
         var table = new Table();
         table.Border(TableBorder.Rounded);
         table.AddColumn("Category");
