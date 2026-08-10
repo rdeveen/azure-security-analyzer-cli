@@ -29,6 +29,15 @@ public class AnalyzerTests
             securityRules:
             [
                 CreateSecurityRule(
+                    access: "Allow",
+                    direction: "Inbound",
+                    sourceAddressPrefix: "*",
+                    destinationAddressPrefix: "*",
+                    sourcePortRange: "*",
+                    destinationPortRange: "*"),
+                CreateSecurityRule(
+                    access: "Allow",
+                    direction: "Outbound",
                     sourceAddressPrefix: "*",
                     destinationAddressPrefix: "*",
                     sourcePortRange: "*",
@@ -40,9 +49,60 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.ShouldBe(2);
-        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow all inbound traffic.");
+        results.Count.ShouldBe(3);
+        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow all inbound and all outbound traffic.");
         results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
+        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
+    }
+
+    [Fact]
+    public async Task Analyze_WithAllowAllInboundTrafficRule_ReturnsAllowAllInboundTrafficAnomaly()
+    {
+        // Arrange
+        var nsg = CreateNetworkSecurityGroup(
+            securityRules:
+            [
+                CreateSecurityRule(
+                    access: "Allow",
+                    direction: "Inbound",
+                    sourceAddressPrefix: "*",
+                    destinationAddressPrefix: "*",
+                    sourcePortRange: "*",
+                    destinationPortRange: "*")
+            ],
+            subnets: [new ResourceReference("/subnets/s1")]);
+
+        // Act
+        var results = await Analyzer.Analyze([nsg]);
+
+        // Assert
+        results.Count.ShouldBe(1);
+        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
+    }
+
+    [Fact]
+    public async Task Analyze_WithAllowAllOutboundTrafficRule_ReturnsAllowAllOutboundTrafficAnomaly()
+    {
+        // Arrange
+        var nsg = CreateNetworkSecurityGroup(
+            securityRules:
+            [
+                CreateSecurityRule(
+                    access: "Allow",
+                    direction: "Outbound",
+                    sourceAddressPrefix: "*",
+                    destinationAddressPrefix: "*",
+                    sourcePortRange: "*",
+                    destinationPortRange: "*")
+            ],
+            subnets: [new ResourceReference("/subnets/s1")]);
+
+        // Act
+        var results = await Analyzer.Analyze([nsg]);
+
+        // Assert
+        results.Count.ShouldBe(1);
+        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
     }
 
     [Fact]
@@ -139,21 +199,32 @@ public class AnalyzerTests
             securityRules:
             [
                 CreateSecurityRule(
+                    access: "Allow",
+                    direction: "Inbound",
+                    sourceAddressPrefix: "*",
+                    destinationAddressPrefix: "*",
+                    sourcePortRange: "*",
+                    destinationPortRange: "*"),
+                CreateSecurityRule(
+                    access: "Allow",
+                    direction: "Outbound",
                     sourceAddressPrefix: "*",
                     destinationAddressPrefix: "*",
                     sourcePortRange: "*",
                     destinationPortRange: "*")
             ],
-            subnets: null);
+            subnets: null,
+            networkInterfaces: null);
 
         // Act
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.ShouldBe(3);
+        results.Count.ShouldBe(4);
         var descriptions = results.Select(r => r.IssueDescription).ToArray();
-        descriptions.ShouldContain("This Network Security Group has security rules that allow all inbound traffic.");
+        descriptions.ShouldContain("This Network Security Group has security rules that allow all inbound and all outbound traffic.");
         descriptions.ShouldContain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
+        descriptions.ShouldContain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
         descriptions.ShouldContain("This Network Security Group is not attached to any subnets or network interfaces. This may give a false sense of security, as it is not actually protecting any resources.");
     }
 

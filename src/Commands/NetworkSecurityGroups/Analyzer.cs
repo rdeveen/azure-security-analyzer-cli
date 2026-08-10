@@ -10,6 +10,7 @@ public class Analyzer
         new AllowsAllTrafficRule(),
         new AllowsInternetInboundCommonPortsRule(),
         new AllowsInternetInboundAllPortsRule(),
+        new AllowsInternetOutboundAllPortsRule(),
         new NotAttachedToSubnetOrNetworkInterfaceRule()
     ];
 
@@ -57,13 +58,23 @@ public class Analyzer
         {
             if (HasAnySecurityRule(networkSecurityGroup, r =>
                 IsAllowInbound(r) &&
-                IsAnyAddress(r.Properties.SourceAddressPrefix, r.Properties.SourceAddressPrefixes) &&
-                IsAnyAddress(r.Properties.DestinationAddressPrefix, r.Properties.DestinationAddressPrefixes) &&
-                IsAnyPort(r.Properties.DestinationPortRange, r.Properties.DestinationPortRanges)))
+                IsAnySourceAddress(r) &&
+                IsAnyDestinationAddress(r) &&
+                IsAnySourcePort(r) &&
+                IsAnyDestinationPort(r))
+                &&
+                HasAnySecurityRule(networkSecurityGroup, r =>
+                IsAllowOutbound(r) &&
+                IsAnySourceAddress(r) &&
+                IsAnyDestinationAddress(r) &&
+                IsAnySourcePort(r) &&
+                IsAnyDestinationPort(r))
+                &&
+                networkSecurityGroup.Properties.SecurityRules?.Length == 2)
             {
                 return new AnomalyDetectionResult(
                     networkSecurityGroup,
-                    "This Network Security Group has security rules that allow all inbound traffic.",
+                    "This Network Security Group has security rules that allow all inbound and all outbound traffic.",
                     SeverityLevel.High);
             }
 
@@ -77,7 +88,7 @@ public class Analyzer
         {
             if (HasAnySecurityRule(networkSecurityGroup, r =>
                 IsAllowInbound(r) &&
-                IsAnyAddress(r.Properties.SourceAddressPrefix, r.Properties.SourceAddressPrefixes) &&
+                IsAnySourceAddress(r) &&
                 (MatchesValue(r.Properties.DestinationPortRange, "22") ||
                  ContainsValue(r.Properties.DestinationPortRanges, "22") ||
                  MatchesValue(r.Properties.DestinationPortRange, "3389") ||
@@ -99,13 +110,32 @@ public class Analyzer
         {
             if (HasAnySecurityRule(networkSecurityGroup, r =>
                 IsAllowInbound(r) &&
-                IsAnyAddress(r.Properties.SourceAddressPrefix, r.Properties.SourceAddressPrefixes) &&
-                IsAnyPort(r.Properties.DestinationPortRange, r.Properties.DestinationPortRanges)))
+                IsAnySourceAddress(r) &&
+                IsAnyDestinationPort(r)))
             {
                 return new AnomalyDetectionResult(
                     networkSecurityGroup,
                     "This Network Security Group has security rules that allow inbound traffic from the internet on all ports.",
                     SeverityLevel.High);
+            }
+
+            return null;
+        }
+    }
+
+    private sealed class AllowsInternetOutboundAllPortsRule : INetworkSecurityGroupAnomalyRule
+    {
+        public AnomalyDetectionResult? TryDetect(NetworkSecurityGroup networkSecurityGroup)
+        {
+            if (HasAnySecurityRule(networkSecurityGroup, r =>
+                IsAllowOutbound(r) &&
+                IsAnySourceAddress(r) &&
+                IsAnyDestinationPort(r)))
+            {
+                return new AnomalyDetectionResult(
+                    networkSecurityGroup,
+                    "This Network Security Group has security rules that allow outbound traffic to the internet on all ports.",
+                    SeverityLevel.Medium);
             }
 
             return null;
@@ -138,11 +168,21 @@ public class Analyzer
         MatchesValue(securityRule.Properties.Access, "Allow") &&
         MatchesValue(securityRule.Properties.Direction, "Inbound");
 
-    private static bool IsAnyAddress(string? singularAddressPrefix, string[]? pluralAddressPrefixes) =>
-        MatchesValue(singularAddressPrefix, "*") || ContainsValue(pluralAddressPrefixes, "*");
+    private static bool IsAllowOutbound(SecurityRule securityRule) =>
+        MatchesValue(securityRule.Properties.Access, "Allow") &&
+        MatchesValue(securityRule.Properties.Direction, "Outbound");
 
-    private static bool IsAnyPort(string? singularPortRange, string[]? pluralPortRanges) =>
-        MatchesValue(singularPortRange, "*") || ContainsValue(pluralPortRanges, "*");
+    private static bool IsAnySourceAddress(SecurityRule securityRule) =>
+        MatchesValue(securityRule.Properties.SourceAddressPrefix, "*") || ContainsValue(securityRule.Properties.SourceAddressPrefixes, "*");
+
+    private static bool IsAnyDestinationAddress(SecurityRule securityRule) =>
+        MatchesValue(securityRule.Properties.DestinationAddressPrefix, "*") || ContainsValue(securityRule.Properties.DestinationAddressPrefixes, "*");
+
+    private static bool IsAnySourcePort(SecurityRule securityRule) =>
+        MatchesValue(securityRule.Properties.SourcePortRange, "*") || ContainsValue(securityRule.Properties.SourcePortRanges, "*");
+
+    private static bool IsAnyDestinationPort(SecurityRule securityRule) =>
+        MatchesValue(securityRule.Properties.DestinationPortRange, "*") || ContainsValue(securityRule.Properties.DestinationPortRanges, "*");
 
     private static bool MatchesValue(string? value, string expectedValue) =>
         string.Equals(value, expectedValue, StringComparison.OrdinalIgnoreCase);
