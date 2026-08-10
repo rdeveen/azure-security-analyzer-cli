@@ -282,6 +282,35 @@ public class AnalyzerTests
         results.Single().Severity.Should().Be(SeverityLevel.Medium);
     }
 
+    [Fact]
+    public async Task Analyze_WithConflictingRules_ReturnsConflictingRulesAnomaly()
+    {
+        // Arrange
+        var nsg = CreateNetworkSecurityGroup(
+            securityRules:
+            [
+                CreateSecurityRule(
+                    access: "Allow",
+                    destinationPortRange: "80",
+                    priority: 100),
+                CreateSecurityRule(
+                    access: "Allow",
+                    destinationPortRange: "443",
+                    priority: 200),
+                CreateSecurityRule(
+                    access: "Deny",
+                    destinationPortRange: "80",
+                    priority: 300)
+            ],
+            subnets: [new ResourceReference("/subnets/s1")]);
+
+        // Act
+        var results = await Analyzer.Analyze([nsg]);
+
+        // Assert
+        results.Any(r => r.IssueDescription.Contains("conflicting security rules", StringComparison.OrdinalIgnoreCase)).Should().BeTrue();
+    }
+
     private static NetworkSecurityGroup CreateNetworkSecurityGroup(
         SecurityRule[]? securityRules,
         ResourceReference[]? subnets,
@@ -308,7 +337,8 @@ public class AnalyzerTests
         string sourcePortRange = "*",
         string destinationPortRange = "*",
         string sourceAddressPrefix = "*",
-        string destinationAddressPrefix = "*")
+        string destinationAddressPrefix = "*",
+        int priority = 100)
     {
         return new SecurityRule(
             Id: "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/networkSecurityGroups/nsg1/securityRules/r1",
@@ -323,7 +353,7 @@ public class AnalyzerTests
                 SourceAddressPrefix: sourceAddressPrefix,
                 DestinationAddressPrefix: destinationAddressPrefix,
                 Access: access,
-                Priority: 100,
+                Priority: priority,
                 Direction: direction,
                 SourcePortRanges: null,
                 DestinationPortRanges: null,
