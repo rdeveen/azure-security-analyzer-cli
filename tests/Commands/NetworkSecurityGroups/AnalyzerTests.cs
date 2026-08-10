@@ -49,10 +49,11 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.Should().Be(3);
+        results.Count.Should().Be(4);
         results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow all inbound and all outbound traffic.");
         results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
         results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has no deny security rules defined.");
     }
 
     [Fact]

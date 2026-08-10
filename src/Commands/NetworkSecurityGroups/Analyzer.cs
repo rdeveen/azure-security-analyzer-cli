@@ -79,21 +79,21 @@ public class Analyzer
                     SeverityLevel.High);
             }
 
-            private sealed class NoDenySecurityRulesRule : INetworkSecurityGroupAnomalyRule
-            {
-                public AnomalyDetectionResult? TryDetect(NetworkSecurityGroup networkSecurityGroup)
-                {
-                    var securityRules = networkSecurityGroup.Properties.SecurityRules;
-                    if (securityRules is { Length: > 0 } && !securityRules.Any(IsDenyRule))
-                    {
-                        return new AnomalyDetectionResult(
-                            networkSecurityGroup,
-                            "This Network Security Group has no deny security rules defined.",
-                            SeverityLevel.Medium);
-                    }
+            return null;
+        }
+    }
 
-                    return null;
-                }
+    private sealed class NoDenySecurityRulesRule : INetworkSecurityGroupAnomalyRule
+    {
+        public AnomalyDetectionResult? TryDetect(NetworkSecurityGroup networkSecurityGroup)
+        {
+            var securityRules = networkSecurityGroup.Properties.SecurityRules;
+            if (securityRules is { Length: > 0 } && !securityRules.Any(IsDenyRule))
+            {
+                return new AnomalyDetectionResult(
+                    networkSecurityGroup,
+                    "This Network Security Group has no deny security rules defined.",
+                    SeverityLevel.Medium);
             }
 
             return null;
