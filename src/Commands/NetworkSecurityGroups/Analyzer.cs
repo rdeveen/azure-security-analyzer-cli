@@ -59,7 +59,6 @@ public class Analyzer
                 IsAllowInbound(r) &&
                 IsAnyAddress(r.Properties.SourceAddressPrefix, r.Properties.SourceAddressPrefixes) &&
                 IsAnyAddress(r.Properties.DestinationAddressPrefix, r.Properties.DestinationAddressPrefixes) &&
-                IsAnyPort(r.Properties.SourcePortRange, r.Properties.SourcePortRanges) &&
                 IsAnyPort(r.Properties.DestinationPortRange, r.Properties.DestinationPortRanges)))
             {
                 return new AnomalyDetectionResult(
