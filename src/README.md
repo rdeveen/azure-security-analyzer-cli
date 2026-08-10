@@ -8,3 +8,7 @@ Azure Security Analyzer CLI
 az login
 azure-security-analyzer --help
 ```
+
+### More info
+
+https://www.github.com/rdeveen/azure-security-analyzer-cli
