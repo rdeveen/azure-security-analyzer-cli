@@ -2,7 +2,7 @@ using AzureSecurityAnalyzer.Commands.Regions;
 using Command = AzureSecurityAnalyzer.Commands.Regions.Command;
 using AzureSecurityAnalyzer.RegionsApi;
 
-using Shouldly;
+using AwesomeAssertions;
 using Moq;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -26,7 +26,7 @@ public class CommandTests
     {
         // Act & Assert - Constructor should not throw
         var command = new Command(mockRegionsRetriever.Object);
-        command.ShouldNotBeNull();
+        command.Should().NotBeNull();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class CommandTests
         var settings = new Settings();
 
         // Assert
-        settings.Output.ShouldBe(AzureSecurityAnalyzer.Commands.OutputFormat.Console);
+        settings.Output.Should().Be(AzureSecurityAnalyzer.Commands.OutputFormat.Console);
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class CommandTests
         var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
-        result.ShouldBe(0);
+        result.Should().Be(0);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class CommandTests
         var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
-        result.ShouldBe(0);
+        result.Should().Be(0);
         mockRegionsRetriever.Verify(r => r.RetrieveRegions(), Times.Once);
     }
 
@@ -105,7 +105,7 @@ public class CommandTests
         var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
-        result.ShouldBe(0);
+        result.Should().Be(0);
         mockRegionsRetriever.Verify(r => r.RetrieveRegions(), Times.Once);
     }
 
@@ -141,8 +141,9 @@ public class CommandTests
         var settings = new Settings { Quiet = true };
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<HttpRequestException>(() => ExecuteAsync(settings));
-        exception.Message.ShouldBe("API unavailable");
+        await FluentActions.Awaiting(() => ExecuteAsync(settings))
+            .Should().ThrowAsync<HttpRequestException>()
+            .WithMessage("API unavailable");
     }
 
     private Task<int> ExecuteAsync(Settings settings)

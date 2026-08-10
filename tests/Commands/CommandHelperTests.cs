@@ -1,5 +1,5 @@
 using AzureSecurityAnalyzer.Commands;
-using Shouldly;
+using AwesomeAssertions;
 using Spectre.Console;
 
 namespace AzureSecurityAnalyzer.Tests.Commands;
@@ -18,7 +18,7 @@ public class CommandHelpersTests
             subscription, isSubscriptionBased: true, id => captured = id);
 
         // Assert
-        result.Successful.ShouldBeTrue();
+        result.Successful.Should().BeTrue();
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public class CommandHelpersTests
             subscription: null, isSubscriptionBased: false, _ => { });
 
         // Assert
-        result.Successful.ShouldBeTrue();
+        result.Successful.Should().BeTrue();
     }
 
     [Fact]
@@ -46,11 +46,11 @@ public class CommandHelpersTests
         // Assert - either it resolved successfully (az CLI present) or returned an error
         if (result.Successful)
         {
-            captured.ShouldNotBe(Guid.Empty);
+            captured.Should().NotBe(Guid.Empty);
         }
         else
         {
-            captured.ShouldBe(Guid.Empty);
+            captured.Should().Be(Guid.Empty);
         }
     }
 
@@ -58,13 +58,13 @@ public class CommandHelpersTests
     public void PrintVersionIfDebug_WithDebugTrue_DoesNotThrow()
     {
         // Act & Assert - should not throw
-        Should.NotThrow(() => CommandHelpers.PrintVersionIfDebug(true));
+        ((Action)(() => CommandHelpers.PrintVersionIfDebug(true))).Should().NotThrow();
     }
 
     [Fact]
     public void PrintVersionIfDebug_WithDebugFalse_DoesNotThrow()
     {
         // Act & Assert - should not throw
-        Should.NotThrow(() => CommandHelpers.PrintVersionIfDebug(false));
+        ((Action)(() => CommandHelpers.PrintVersionIfDebug(false))).Should().NotThrow();
     }
 }

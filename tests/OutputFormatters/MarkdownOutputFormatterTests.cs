@@ -1,7 +1,7 @@
 using AzureSecurityAnalyzer.ManagementApi;
 using AzureSecurityAnalyzer.OutputFormatters;
 
-using Shouldly;
+using AwesomeAssertions;
 
 namespace AzureSecurityAnalyzer.Tests.OutputFormatters;
 
@@ -18,9 +18,9 @@ public class MarkdownOutputFormatterTests
             new AzureSecurityAnalyzer.Commands.NetworkSecurityGroups.Settings(), [], []));
 
         // Assert
-        output.ShouldContain("No network security groups found.");
-        output.ShouldNotContain("# Network Security Groups");
-        output.ShouldNotContain("|Name|");
+        output.Should().Contain("No network security groups found.");
+        output.Should().NotContain("# Network Security Groups");
+        output.Should().NotContain("|Name|");
     }
 
     [Fact]
@@ -31,9 +31,9 @@ public class MarkdownOutputFormatterTests
             new AzureSecurityAnalyzer.Commands.NetworkSecurityGroups.Settings(), [CreateNetworkSecurityGroup()], []));
 
         // Assert
-        output.ShouldContain("# Network Security Groups");
-        output.ShouldContain("nsg1");
-        output.ShouldNotContain("No network security groups found.");
+        output.Should().Contain("# Network Security Groups");
+        output.Should().Contain("nsg1");
+        output.Should().NotContain("No network security groups found.");
     }
 
     [Fact]
@@ -44,9 +44,9 @@ public class MarkdownOutputFormatterTests
             new AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Settings(), []));
 
         // Assert
-        output.ShouldContain("No recommendations found.");
-        output.ShouldNotContain("# Advisor Recommendations");
-        output.ShouldNotContain("|Category|");
+        output.Should().Contain("No recommendations found.");
+        output.Should().NotContain("# Advisor Recommendations");
+        output.Should().NotContain("|Category|");
     }
 
     [Fact]
@@ -57,9 +57,9 @@ public class MarkdownOutputFormatterTests
             new AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Settings(), [CreateRecommendation()]));
 
         // Assert
-        output.ShouldContain("# Advisor Recommendations");
-        output.ShouldContain("mystorageaccount");
-        output.ShouldNotContain("No recommendations found.");
+        output.Should().Contain("# Advisor Recommendations");
+        output.Should().Contain("mystorageaccount");
+        output.Should().NotContain("No recommendations found.");
     }
 
     private static async Task<string> CaptureConsoleOutput(Func<Task> action)
