@@ -42,6 +42,7 @@ public class AnalyzerTests
         // Assert
         results.Count.ShouldBe(2);
         results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow all inbound traffic.");
+        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
     }
 
     [Fact]

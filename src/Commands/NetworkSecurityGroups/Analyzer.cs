@@ -14,7 +14,7 @@ public class Analyzer(Settings settings)
         new NotAttachedToSubnetOrNetworkInterfaceRule()
     ];
 
-    public static async Task<IReadOnlyCollection<AnomalyDetectionResult>> Analyze(IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups)
+    public static Task<IReadOnlyCollection<AnomalyDetectionResult>> Analyze(IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups)
     {
         var results = new List<AnomalyDetectionResult>();
         foreach (var nsg in networkSecurityGroups)
@@ -28,7 +28,7 @@ public class Analyzer(Settings settings)
                 }
             }
         }
-        return results;
+        return Task.FromResult<IReadOnlyCollection<AnomalyDetectionResult>>(results);
     }
 
     private interface INetworkSecurityGroupAnomalyRule
