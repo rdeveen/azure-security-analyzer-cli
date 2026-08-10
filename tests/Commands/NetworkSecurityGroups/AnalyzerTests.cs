@@ -1,6 +1,6 @@
 using AzureSecurityAnalyzer.Commands.NetworkSecurityGroups;
 using AzureSecurityAnalyzer.ManagementApi;
-using Shouldly;
+using AwesomeAssertions;
 
 namespace AzureSecurityAnalyzer.Tests.Commands.NetworkSecurityGroups;
 
@@ -16,9 +16,9 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.ShouldBe(1);
-        results.Single().IssueDescription.ShouldBe("This Network Security Group has no security rules defined.");
-        results.Single().Severity.ShouldBe(SeverityLevel.Medium);
+        results.Count.Should().Be(1);
+        results.Single().IssueDescription.Should().Be("This Network Security Group has no security rules defined.");
+        results.Single().Severity.Should().Be(SeverityLevel.Medium);
     }
 
     [Fact]
@@ -49,10 +49,10 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.ShouldBe(3);
-        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow all inbound and all outbound traffic.");
-        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
-        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
+        results.Count.Should().Be(3);
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow all inbound and all outbound traffic.");
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
     }
 
     [Fact]
@@ -76,8 +76,8 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.ShouldBe(1);
-        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
+        results.Count.Should().Be(1);
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
     }
 
     [Fact]
@@ -101,8 +101,8 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.ShouldBe(1);
-        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
+        results.Count.Should().Be(1);
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
     }
 
     [Fact]
@@ -122,9 +122,9 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.ShouldBe(1);
-        results.Single().IssueDescription.ShouldBe("This Network Security Group has security rules that allow inbound traffic from the internet on common ports (e.g., 22, 3389).");
-        results.Single().Severity.ShouldBe(SeverityLevel.High);
+        results.Count.Should().Be(1);
+        results.Single().IssueDescription.Should().Be("This Network Security Group has security rules that allow inbound traffic from the internet on common ports (e.g., 22, 3389).");
+        results.Single().Severity.Should().Be(SeverityLevel.High);
     }
 
     [Fact]
@@ -146,9 +146,9 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.ShouldBe(1);
-        results.Single().IssueDescription.ShouldBe("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
-        results.Single().Severity.ShouldBe(SeverityLevel.High);
+        results.Count.Should().Be(1);
+        results.Single().IssueDescription.Should().Be("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
+        results.Single().Severity.Should().Be(SeverityLevel.High);
     }
 
     [Fact]
@@ -167,9 +167,9 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.ShouldBe(1);
-        results.Single().IssueDescription.ShouldBe("This Network Security Group is not attached to any subnets or network interfaces. This may give a false sense of security, as it is not actually protecting any resources.");
-        results.Single().Severity.ShouldBe(SeverityLevel.Low);
+        results.Count.Should().Be(1);
+        results.Single().IssueDescription.Should().Be("This Network Security Group is not attached to any subnets or network interfaces. This may give a false sense of security, as it is not actually protecting any resources.");
+        results.Single().Severity.Should().Be(SeverityLevel.Low);
     }
 
     [Fact]
@@ -188,7 +188,7 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.ShouldBeEmpty();
+        results.Should().BeEmpty();
     }
 
     [Fact]
@@ -220,12 +220,12 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.ShouldBe(4);
+        results.Count.Should().Be(4);
         var descriptions = results.Select(r => r.IssueDescription).ToArray();
-        descriptions.ShouldContain("This Network Security Group has security rules that allow all inbound and all outbound traffic.");
-        descriptions.ShouldContain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
-        descriptions.ShouldContain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
-        descriptions.ShouldContain("This Network Security Group is not attached to any subnets or network interfaces. This may give a false sense of security, as it is not actually protecting any resources.");
+        descriptions.Should().Contain("This Network Security Group has security rules that allow all inbound and all outbound traffic.");
+        descriptions.Should().Contain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
+        descriptions.Should().Contain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
+        descriptions.Should().Contain("This Network Security Group is not attached to any subnets or network interfaces. This may give a false sense of security, as it is not actually protecting any resources.");
     }
 
     [Fact]
@@ -248,7 +248,7 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.ShouldBeEmpty();
+        results.Should().BeEmpty();
     }
 
     private static NetworkSecurityGroup CreateNetworkSecurityGroup(

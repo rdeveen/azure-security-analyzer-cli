@@ -1,6 +1,6 @@
 using AzureSecurityAnalyzer.OutputFormatters;
 
-using Shouldly;
+using AwesomeAssertions;
 using Spectre.Console;
 
 namespace AzureSecurityAnalyzer.Tests.OutputFormatters;
@@ -18,8 +18,8 @@ public class ConsoleOutputFormatterTests
             new AzureSecurityAnalyzer.Commands.NetworkSecurityGroups.Settings(), [], []));
 
         // Assert
-        output.ShouldContain("No network security groups found.");
-        output.ShouldNotContain("Resource Group");
+        output.Should().Contain("No network security groups found.");
+        output.Should().NotContain("Resource Group");
     }
 
     [Fact]
@@ -31,9 +31,9 @@ public class ConsoleOutputFormatterTests
             [MarkdownOutputFormatterTests.CreateNetworkSecurityGroup()], []));
 
         // Assert
-        output.ShouldContain("Resource Group");
-        output.ShouldContain("nsg1");
-        output.ShouldNotContain("No network security groups found.");
+        output.Should().Contain("Resource Group");
+        output.Should().Contain("nsg1");
+        output.Should().NotContain("No network security groups found.");
     }
 
     [Fact]
@@ -44,8 +44,8 @@ public class ConsoleOutputFormatterTests
             new AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Settings(), []));
 
         // Assert
-        output.ShouldContain("No recommendations found.");
-        output.ShouldNotContain("Category");
+        output.Should().Contain("No recommendations found.");
+        output.Should().NotContain("Category");
     }
 
     [Fact]
@@ -57,9 +57,9 @@ public class ConsoleOutputFormatterTests
             [MarkdownOutputFormatterTests.CreateRecommendation()]));
 
         // Assert
-        output.ShouldContain("Category");
-        output.ShouldContain("mystorageaccount");
-        output.ShouldNotContain("No recommendations found.");
+        output.Should().Contain("Category");
+        output.Should().Contain("mystorageaccount");
+        output.Should().NotContain("No recommendations found.");
     }
 
     private static async Task<string> CaptureAnsiConsoleOutput(Func<Task> action)

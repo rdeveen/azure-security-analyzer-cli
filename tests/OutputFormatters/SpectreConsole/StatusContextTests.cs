@@ -1,6 +1,6 @@
 using AzureSecurityAnalyzer.OutputFormatters.SpectreConsole;
 
-using Shouldly;
+using AwesomeAssertions;
 
 namespace AzureSecurityAnalyzer.Tests.OutputFormatters.SpectreConsole;
 
@@ -13,8 +13,8 @@ public class StatusContextTests
         var context = new StatusContext();
 
         // Act & Assert
-        Should.NotThrow(() => context.Status = "Some status");
-        context.Status.ShouldBeNull();
+        ((Action)(() => { context.Status = "Some status"; })).Should().NotThrow();
+        context.Status.Should().BeNull();
     }
 
     [Fact]
@@ -24,6 +24,6 @@ public class StatusContextTests
         var context = new StatusContext();
 
         // Act & Assert
-        Should.NotThrow(() => context.Refresh());
+        ((Action)(() => context.Refresh())).Should().NotThrow();
     }
 }

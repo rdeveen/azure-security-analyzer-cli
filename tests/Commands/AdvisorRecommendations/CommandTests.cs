@@ -3,7 +3,7 @@ using Command = AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Command;
 using AzureSecurityAnalyzer.ManagementApi;
 using AzureSecurityAnalyzer.OutputFormatters;
 
-using Shouldly;
+using AwesomeAssertions;
 using Moq;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -29,7 +29,7 @@ public class CommandTests
     {
         // Act & Assert - Constructor should not throw
         var command = new Command(mockAzureResourceRetriever.Object);
-        command.ShouldNotBeNull();
+        command.Should().NotBeNull();
     }
 
     [Fact]
@@ -39,9 +39,9 @@ public class CommandTests
         var settings = new Settings();
 
         // Assert
-        settings.Output.ShouldBe(AzureSecurityAnalyzer.Commands.OutputFormat.Console);
-        settings.ManagementApiAddress.ShouldBe("https://management.azure.com/");
-        settings.HttpTimeout.ShouldBe(100);
+        settings.Output.Should().Be(AzureSecurityAnalyzer.Commands.OutputFormat.Console);
+        settings.ManagementApiAddress.Should().Be("https://management.azure.com/");
+        settings.HttpTimeout.Should().Be(100);
     }
 
     [Fact]
@@ -59,9 +59,9 @@ public class CommandTests
         var scope = settings.GetScope;
 
         // Assert
-        scope.Name.ShouldBe("ResourceGroup");
-        scope.ScopePath.ShouldBe($"/subscriptions/{subscriptionId}/resourceGroups/azure-security-analyzer-cli-rg");
-        scope.IsSubscriptionBased.ShouldBeTrue();
+        scope.Name.Should().Be("ResourceGroup");
+        scope.ScopePath.Should().Be($"/subscriptions/{subscriptionId}/resourceGroups/azure-security-analyzer-cli-rg");
+        scope.IsSubscriptionBased.Should().BeTrue();
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public class CommandTests
         var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
-        result.ShouldBe(0);
+        result.Should().Be(0);
         mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesResourceGroupScope(subscriptionId, "azure-security-analyzer-cli-rg")), Times.Once);
         mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesResourceGroupScope(subscriptionId, "azure-security-analyzer-cli-rg")), Times.Once);
     }
@@ -156,7 +156,7 @@ public class CommandTests
         var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
-        result.ShouldBe(0);
+        result.Should().Be(0);
     }
 
     [Fact]
@@ -176,7 +176,7 @@ public class CommandTests
         var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
-        result.ShouldBe(0);
+        result.Should().Be(0);
         mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
         mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
     }
@@ -202,7 +202,7 @@ public class CommandTests
         var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
-        result.ShouldBe(0);
+        result.Should().Be(0);
         mockAzureResourceRetriever.Verify(r => r.RetrieveAdvisorRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
         mockAzureResourceRetriever.Verify(r => r.RetrieveDefenderForCloudRecommendations(It.IsAny<bool>(), subscriptionId, MatchesSubscriptionScope(subscriptionId)), Times.Once);
     }
@@ -238,7 +238,7 @@ public class CommandTests
         var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
 
         // Assert
-        result.ShouldBe(0);
+        result.Should().Be(0);
     }
 
     [Fact]
@@ -252,8 +252,9 @@ public class CommandTests
         var settings = new Settings { Quiet = true, Subscription = subscriptionId };
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<HttpRequestException>(() => ExecuteAsync(settings));
-        exception.Message.ShouldBe("API unavailable");
+        await FluentActions.Awaiting(() => ExecuteAsync(settings))
+            .Should().ThrowAsync<HttpRequestException>()
+            .WithMessage("API unavailable");
     }
 
     [Theory]
@@ -267,7 +268,7 @@ public class CommandTests
         var recommendation = CreateRecommendation(impact: impact);
 
         // Act & Assert
-        recommendation.GetImpactOrder().ShouldBe(expectedOrder);
+        recommendation.GetImpactOrder().Should().Be(expectedOrder);
     }
 
     private Task<int> ExecuteAsync(Settings settings)
