@@ -290,14 +290,17 @@ public class AnalyzerTests
             securityRules:
             [
                 CreateSecurityRule(
+                    name: "AllowHttpInbound",
                     access: "Allow",
                     destinationPortRange: "80",
                     priority: 100),
                 CreateSecurityRule(
+                    name: "AllowHttpsInbound",
                     access: "Allow",
                     destinationPortRange: "443",
                     priority: 200),
                 CreateSecurityRule(
+                    name: "DenyHttpInbound",
                     access: "Deny",
                     destinationPortRange: "80",
                     priority: 300)
@@ -308,7 +311,8 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Any(r => r.IssueDescription.Contains("conflicting security rules", StringComparison.OrdinalIgnoreCase)).Should().BeTrue();
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has conflicting security rules: 'AllowHttpInbound' and 'DenyHttpInbound'.");
+        results.Single(r => r.IssueDescription.Contains("conflicting security rules", StringComparison.OrdinalIgnoreCase)).Severity.Should().Be(SeverityLevel.High);
     }
 
     private static NetworkSecurityGroup CreateNetworkSecurityGroup(
@@ -332,6 +336,7 @@ public class AnalyzerTests
     }
 
     private static SecurityRule CreateSecurityRule(
+        string name = "r1",
         string access = "Allow",
         string direction = "Inbound",
         string sourcePortRange = "*",
@@ -342,7 +347,7 @@ public class AnalyzerTests
     {
         return new SecurityRule(
             Id: "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/networkSecurityGroups/nsg1/securityRules/r1",
-            Name: "r1",
+            Name: name,
             Type: "Microsoft.Network/networkSecurityGroups/securityRules",
             Properties: new SecurityRuleProperties(
                 ProvisioningState: "Succeeded",

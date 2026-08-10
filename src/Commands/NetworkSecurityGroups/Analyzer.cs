@@ -7,6 +7,7 @@ public class Analyzer
     private static readonly IReadOnlyCollection<INetworkSecurityGroupAnomalyRule> Rules =
     [
         new MissingSecurityRulesRule(),
+        new ConflictingSecurityRulesRule(),
         new NoDenySecurityRulesRule(),
         new AllowsAllTrafficRule(),
         new AllowsInternetInboundCommonPortsRule(),
@@ -77,6 +78,37 @@ public class Analyzer
                     networkSecurityGroup,
                     "This Network Security Group has security rules that allow all inbound and all outbound traffic.",
                     SeverityLevel.High);
+            }
+
+            return null;
+        }
+    }
+
+    private sealed class ConflictingSecurityRulesRule : INetworkSecurityGroupAnomalyRule
+    {
+        public AnomalyDetectionResult? TryDetect(NetworkSecurityGroup networkSecurityGroup)
+        {
+            var securityRules = networkSecurityGroup.Properties.SecurityRules;
+            if (securityRules is not { Length: > 1 })
+            {
+                return null;
+            }
+
+            for (var i = 0; i < securityRules.Length - 1; i++)
+            {
+                for (var j = i + 1; j < securityRules.Length; j++)
+                {
+                    var rule1 = securityRules[i];
+                    var rule2 = securityRules[j];
+
+                    if (IsConflictingRulePair(rule1, rule2))
+                    {
+                        return new AnomalyDetectionResult(
+                            networkSecurityGroup,
+                            $"This Network Security Group has conflicting security rules: '{rule1.Name}' and '{rule2.Name}'.",
+                            SeverityLevel.High);
+                    }
+                }
             }
 
             return null;
@@ -193,6 +225,18 @@ public class Analyzer
     private static bool IsDenyRule(SecurityRule securityRule) =>
         MatchesValue(securityRule.Properties.Access, "Deny");
 
+    private static bool IsConflictingRulePair(SecurityRule rule1, SecurityRule rule2) =>
+        !MatchesValue(rule1.Properties.Access, rule2.Properties.Access)
+        && MatchesRuleScope(rule1, rule2);
+
+    private static bool MatchesRuleScope(SecurityRule rule1, SecurityRule rule2) =>
+        MatchesValue(rule1.Properties.Direction, rule2.Properties.Direction)
+        && MatchesValue(rule1.Properties.Protocol, rule2.Properties.Protocol)
+        && MatchesNormalizedValues(rule1.Properties.SourceAddressPrefix, rule1.Properties.SourceAddressPrefixes, rule2.Properties.SourceAddressPrefix, rule2.Properties.SourceAddressPrefixes)
+        && MatchesNormalizedValues(rule1.Properties.DestinationAddressPrefix, rule1.Properties.DestinationAddressPrefixes, rule2.Properties.DestinationAddressPrefix, rule2.Properties.DestinationAddressPrefixes)
+        && MatchesNormalizedValues(rule1.Properties.SourcePortRange, rule1.Properties.SourcePortRanges, rule2.Properties.SourcePortRange, rule2.Properties.SourcePortRanges)
+        && MatchesNormalizedValues(rule1.Properties.DestinationPortRange, rule1.Properties.DestinationPortRanges, rule2.Properties.DestinationPortRange, rule2.Properties.DestinationPortRanges);
+
     private static bool IsAnySourceAddress(SecurityRule securityRule) =>
         MatchesValue(securityRule.Properties.SourceAddressPrefix, "*") || ContainsValue(securityRule.Properties.SourceAddressPrefixes, "*");
 
@@ -207,6 +251,26 @@ public class Analyzer
 
     private static bool MatchesValue(string? value, string expectedValue) =>
         string.Equals(value, expectedValue, StringComparison.OrdinalIgnoreCase);
+
+    private static bool MatchesNormalizedValues(string? value1, string[]? values1, string? value2, string[]? values2)
+    {
+        var normalizedValues1 = NormalizeValues(value1, values1);
+        var normalizedValues2 = NormalizeValues(value2, values2);
+
+        if (normalizedValues1.Length != normalizedValues2.Length)
+        {
+            return false;
+        }
+
+        return normalizedValues1
+            .OrderBy(v => v, StringComparer.OrdinalIgnoreCase)
+            .SequenceEqual(normalizedValues2.OrderBy(v => v, StringComparer.OrdinalIgnoreCase), StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string[] NormalizeValues(string? value, string[]? values) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? [value]
+            : values?.Where(v => !string.IsNullOrWhiteSpace(v)).ToArray() ?? [];
 
     private static bool ContainsValue(string[]? values, string expectedValue) =>
         values?.Any(v => string.Equals(v, expectedValue, StringComparison.OrdinalIgnoreCase)) ?? false;
