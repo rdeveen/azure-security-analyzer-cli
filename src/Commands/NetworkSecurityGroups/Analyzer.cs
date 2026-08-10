@@ -2,9 +2,8 @@ using AzureSecurityAnalyzer.ManagementApi;
 
 namespace AzureSecurityAnalyzer.Commands.NetworkSecurityGroups;
 
-public class Analyzer(Settings settings)
+public class Analyzer
 {
-    public Settings Settings { get; } = settings;
     private static readonly IReadOnlyCollection<INetworkSecurityGroupAnomalyRule> Rules =
     [
         new MissingSecurityRulesRule(),
