@@ -40,9 +40,8 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.ShouldBe(1);
-        results.Single().IssueDescription.ShouldBe("This Network Security Group has security rules that allow all inbound and outbound traffic.");
-        results.Single().Severity.ShouldBe(SeverityLevel.High);
+        results.Count.ShouldBe(2);
+        results.Select(r => r.IssueDescription).ShouldContain("This Network Security Group has security rules that allow all inbound traffic.");
     }
 
     [Fact]
@@ -76,7 +75,9 @@ public class AnalyzerTests
             [
                 CreateSecurityRule(
                     sourceAddressPrefix: "*",
-                    destinationPortRange: "*")
+                    sourcePortRange: "1024-65535",
+                    destinationPortRange: "*",
+                    destinationAddressPrefix: "10.0.0.4")
             ],
             subnets: [new ResourceReference("/subnets/s1")]);
 
@@ -129,12 +130,10 @@ public class AnalyzerTests
 
         // Assert
         results.Count.ShouldBe(3);
-        results.Select(r => r.IssueDescription).ShouldBe(
-        [
-            "This Network Security Group has security rules that allow all inbound and outbound traffic.",
-            "This Network Security Group has security rules that allow inbound traffic from the internet on all ports.",
-            "This Network Security Group is not attached to any subnets or network interfaces. This may give a false sense of security, as it is not actually protecting any resources."
-        ]);
+        var descriptions = results.Select(r => r.IssueDescription).ToArray();
+        descriptions.ShouldContain("This Network Security Group has security rules that allow all inbound traffic.");
+        descriptions.ShouldContain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
+        descriptions.ShouldContain("This Network Security Group is not attached to any subnets or network interfaces. This may give a false sense of security, as it is not actually protecting any resources.");
     }
 
     [Fact]

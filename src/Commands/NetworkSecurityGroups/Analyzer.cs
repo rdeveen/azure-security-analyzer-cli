@@ -65,7 +65,7 @@ public class Analyzer(Settings settings)
             {
                 return new AnomalyDetectionResult(
                     networkSecurityGroup,
-                    "This Network Security Group has security rules that allow all inbound and outbound traffic.",
+                    "This Network Security Group has security rules that allow all inbound traffic.",
                     SeverityLevel.High);
             }
 
@@ -147,7 +147,7 @@ public class Analyzer(Settings settings)
         string.Equals(value, expectedValue, StringComparison.OrdinalIgnoreCase);
 
     private static bool ContainsValue(string[]? values, string expectedValue) =>
-        values?.Contains(expectedValue) ?? false;
+        values?.Any(v => string.Equals(v, expectedValue, StringComparison.OrdinalIgnoreCase)) ?? false;
 }
 
 public record AnomalyDetectionResult(
