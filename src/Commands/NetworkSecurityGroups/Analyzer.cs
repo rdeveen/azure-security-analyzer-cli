@@ -118,7 +118,10 @@ public class Analyzer(Settings settings)
     {
         public AnomalyDetectionResult? TryDetect(NetworkSecurityGroup networkSecurityGroup)
         {
-            if (networkSecurityGroup.Properties.Subnets == null || networkSecurityGroup.Properties.Subnets.Length == 0)
+            var hasSubnets = networkSecurityGroup.Properties.Subnets is { Length: > 0 };
+            var hasNetworkInterfaces = networkSecurityGroup.Properties.NetworkInterfaces is { Length: > 0 };
+
+            if (!hasSubnets && !hasNetworkInterfaces)
             {
                 return new AnomalyDetectionResult(
                     networkSecurityGroup,

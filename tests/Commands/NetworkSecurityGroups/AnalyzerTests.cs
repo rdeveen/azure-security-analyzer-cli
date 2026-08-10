@@ -91,7 +91,7 @@ public class AnalyzerTests
     }
 
     [Fact]
-    public async Task Analyze_WithoutSubnets_ReturnsUnattachedAnomaly()
+    public async Task Analyze_WithoutSubnetsAndNetworkInterfaces_ReturnsUnattachedAnomaly()
     {
         // Arrange
         var nsg = CreateNetworkSecurityGroup(
@@ -99,7 +99,8 @@ public class AnalyzerTests
             [
                 CreateSecurityRule(sourceAddressPrefix: "10.0.0.0/24", destinationPortRange: "443")
             ],
-            subnets: null);
+            subnets: null,
+            networkInterfaces: null);
 
         // Act
         var results = await Analyzer.Analyze([nsg]);
@@ -108,6 +109,25 @@ public class AnalyzerTests
         results.Count.ShouldBe(1);
         results.Single().IssueDescription.ShouldBe("This Network Security Group is not attached to any subnets or network interfaces. This may give a false sense of security, as it is not actually protecting any resources.");
         results.Single().Severity.ShouldBe(SeverityLevel.Low);
+    }
+
+    [Fact]
+    public async Task Analyze_WithoutSubnetsButWithNetworkInterface_DoesNotReturnUnattachedAnomaly()
+    {
+        // Arrange
+        var nsg = CreateNetworkSecurityGroup(
+            securityRules:
+            [
+                CreateSecurityRule(sourceAddressPrefix: "10.0.0.0/24", destinationPortRange: "443")
+            ],
+            subnets: null,
+            networkInterfaces: [new ResourceReference("/networkInterfaces/nic1")]);
+
+        // Act
+        var results = await Analyzer.Analyze([nsg]);
+
+        // Assert
+        results.ShouldBeEmpty();
     }
 
     [Fact]
@@ -159,7 +179,10 @@ public class AnalyzerTests
         results.ShouldBeEmpty();
     }
 
-    private static NetworkSecurityGroup CreateNetworkSecurityGroup(SecurityRule[]? securityRules, ResourceReference[]? subnets)
+    private static NetworkSecurityGroup CreateNetworkSecurityGroup(
+        SecurityRule[]? securityRules,
+        ResourceReference[]? subnets,
+        ResourceReference[]? networkInterfaces = null)
     {
         return new NetworkSecurityGroup(
             Id: "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/networkSecurityGroups/nsg1",
@@ -172,7 +195,7 @@ public class AnalyzerTests
                 ResourceGuid: Guid.NewGuid().ToString(),
                 SecurityRules: securityRules,
                 DefaultSecurityRules: null,
-                NetworkInterfaces: null,
+                NetworkInterfaces: networkInterfaces,
                 Subnets: subnets));
     }
 
