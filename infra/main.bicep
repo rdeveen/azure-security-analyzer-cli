@@ -221,6 +221,17 @@ resource subnetNsgAllowAll 'Microsoft.Network/virtualNetworks/subnets@2025-07-01
   }
 }
 
+resource subnetNsgConflictingRules 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = {
+  parent: vnetSecurityTest
+  name: 'subnet-nsg-conflicting-rules'
+  properties: {
+    addressPrefix: '10.0.4.0/24'
+    networkSecurityGroup: {
+      id: nsgWithConflictingRules.id
+    }
+  }
+}
+
 @description('This subnet has no NSG associated with it which results in a Security recommendation from Azure Advisor.')
 resource subnetNsgNone 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = {
   parent: vnetSecurityTest

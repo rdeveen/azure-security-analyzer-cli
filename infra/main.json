@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.45.15.27210",
-      "templateHash": "15949266204397571059"
+      "templateHash": "7027518360026230789"
     }
   },
   "parameters": {
@@ -263,6 +263,21 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-subnet-allow-all')]",
+        "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-security-test')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersion": "2025-07-01",
+      "name": "[format('{0}/{1}', 'vnet-security-test', 'subnet-nsg-conflicting-rules')]",
+      "properties": {
+        "addressPrefix": "10.0.4.0/24",
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-conflicting-rules')]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-conflicting-rules')]",
         "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-security-test')]"
       ]
     },
