@@ -7,6 +7,7 @@ public class Analyzer
     private static readonly IReadOnlyCollection<INetworkSecurityGroupAnomalyRule> Rules =
     [
         new MissingSecurityRulesRule(),
+        new NoDenySecurityRulesRule(),
         new AllowsAllTrafficRule(),
         new AllowsInternetInboundCommonPortsRule(),
         new AllowsInternetInboundAllPortsRule(),
@@ -76,6 +77,23 @@ public class Analyzer
                     networkSecurityGroup,
                     "This Network Security Group has security rules that allow all inbound and all outbound traffic.",
                     SeverityLevel.High);
+            }
+
+            return null;
+        }
+    }
+
+    private sealed class NoDenySecurityRulesRule : INetworkSecurityGroupAnomalyRule
+    {
+        public AnomalyDetectionResult? TryDetect(NetworkSecurityGroup networkSecurityGroup)
+        {
+            var securityRules = networkSecurityGroup.Properties.SecurityRules;
+            if (securityRules is { Length: > 0 } && !securityRules.Any(IsDenyRule))
+            {
+                return new AnomalyDetectionResult(
+                    networkSecurityGroup,
+                    "This Network Security Group has no deny security rules defined.",
+                    SeverityLevel.Medium);
             }
 
             return null;
@@ -171,6 +189,9 @@ public class Analyzer
     private static bool IsAllowOutbound(SecurityRule securityRule) =>
         MatchesValue(securityRule.Properties.Access, "Allow") &&
         MatchesValue(securityRule.Properties.Direction, "Outbound");
+
+    private static bool IsDenyRule(SecurityRule securityRule) =>
+        MatchesValue(securityRule.Properties.Access, "Deny");
 
     private static bool IsAnySourceAddress(SecurityRule securityRule) =>
         MatchesValue(securityRule.Properties.SourceAddressPrefix, "*") || ContainsValue(securityRule.Properties.SourceAddressPrefixes, "*");
