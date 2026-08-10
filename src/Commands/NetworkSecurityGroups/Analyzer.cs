@@ -11,7 +11,7 @@ public class Analyzer(Settings settings)
         new AllowsAllTrafficRule(),
         new AllowsInternetInboundCommonPortsRule(),
         new AllowsInternetInboundAllPortsRule(),
-        new NotAttachedToSubnetRule()
+        new NotAttachedToSubnetOrNetworkInterfaceRule()
     ];
 
     public static async Task<IReadOnlyCollection<AnomalyDetectionResult>> Analyze(IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups)
