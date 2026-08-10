@@ -76,8 +76,9 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.Should().Be(1);
+        results.Count.Should().Be(2);
         results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has no deny security rules defined.");
     }
 
     [Fact]
@@ -101,8 +102,9 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.Should().Be(1);
+        results.Count.Should().Be(2);
         results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has no deny security rules defined.");
     }
 
     [Fact]
@@ -122,9 +124,9 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.Should().Be(1);
-        results.Single().IssueDescription.Should().Be("This Network Security Group has security rules that allow inbound traffic from the internet on common ports (e.g., 22, 3389).");
-        results.Single().Severity.Should().Be(SeverityLevel.High);
+        results.Count.Should().Be(2);
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow inbound traffic from the internet on common ports (e.g., 22, 3389).");
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has no deny security rules defined.");
     }
 
     [Fact]
@@ -146,9 +148,9 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.Should().Be(1);
-        results.Single().IssueDescription.Should().Be("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
-        results.Single().Severity.Should().Be(SeverityLevel.High);
+        results.Count.Should().Be(2);
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has no deny security rules defined.");
     }
 
     [Fact]
@@ -167,9 +169,9 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.Should().Be(1);
-        results.Single().IssueDescription.Should().Be("This Network Security Group is not attached to any subnets or network interfaces. This may give a false sense of security, as it is not actually protecting any resources.");
-        results.Single().Severity.Should().Be(SeverityLevel.Low);
+        results.Count.Should().Be(2);
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group is not attached to any subnets or network interfaces. This may give a false sense of security, as it is not actually protecting any resources.");
+        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has no deny security rules defined.");
     }
 
     [Fact]
@@ -188,7 +190,9 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Should().BeEmpty();
+        results.Count.Should().Be(1);
+        results.Single().IssueDescription.Should().Be("This Network Security Group has no deny security rules defined.");
+        results.Single().Severity.Should().Be(SeverityLevel.Medium);
     }
 
     [Fact]
@@ -220,12 +224,13 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Count.Should().Be(4);
+        results.Count.Should().Be(5);
         var descriptions = results.Select(r => r.IssueDescription).ToArray();
         descriptions.Should().Contain("This Network Security Group has security rules that allow all inbound and all outbound traffic.");
         descriptions.Should().Contain("This Network Security Group has security rules that allow inbound traffic from the internet on all ports.");
         descriptions.Should().Contain("This Network Security Group has security rules that allow outbound traffic to the internet on all ports.");
         descriptions.Should().Contain("This Network Security Group is not attached to any subnets or network interfaces. This may give a false sense of security, as it is not actually protecting any resources.");
+        descriptions.Should().Contain("This Network Security Group has no deny security rules defined.");
     }
 
     [Fact]
@@ -249,6 +254,31 @@ public class AnalyzerTests
 
         // Assert
         results.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Analyze_WithoutDenyRules_ReturnsNoDenyRulesAnomaly()
+    {
+        // Arrange
+        var nsg = CreateNetworkSecurityGroup(
+            securityRules:
+            [
+                CreateSecurityRule(
+                    access: "Allow",
+                    sourceAddressPrefix: "10.0.0.0/24",
+                    destinationAddressPrefix: "10.0.1.0/24",
+                    sourcePortRange: "*",
+                    destinationPortRange: "443")
+            ],
+            subnets: [new ResourceReference("/subnets/s1")]);
+
+        // Act
+        var results = await Analyzer.Analyze([nsg]);
+
+        // Assert
+        results.Count.Should().Be(1);
+        results.Single().IssueDescription.Should().Be("This Network Security Group has no deny security rules defined.");
+        results.Single().Severity.Should().Be(SeverityLevel.Medium);
     }
 
     private static NetworkSecurityGroup CreateNetworkSecurityGroup(
