@@ -114,7 +114,7 @@ public class Analyzer(Settings settings)
         }
     }
 
-    private sealed class NotAttachedToSubnetRule : INetworkSecurityGroupAnomalyRule
+    private sealed class NotAttachedToSubnetOrNetworkInterfaceRule : INetworkSecurityGroupAnomalyRule
     {
         public AnomalyDetectionResult? TryDetect(NetworkSecurityGroup networkSecurityGroup)
         {
