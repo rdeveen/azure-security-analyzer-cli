@@ -51,6 +51,13 @@ public class JsonOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteRouteTables(Commands.RouteTables.Settings settings, IReadOnlyCollection<RouteTable> routeTables)
+    {
+        WriteJson(settings, routeTables);
+
+        return Task.CompletedTask;
+    }
+
     private static void WriteJson(Commands.ICommandSettings settings, object items)
     {
         var options = new JsonSerializerOptions { WriteIndented = true };

@@ -18,6 +18,7 @@ public interface IAzureResourceRetriever
 
     Task<Subscription> RetrieveSubscription(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId);
+    Task<IReadOnlyCollection<RouteTable>> RetrieveRouteTables(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
 
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
@@ -86,6 +87,43 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         }
 
         return networkSecurityGroups;
+    }
+
+    public async Task<IReadOnlyCollection<RouteTable>> RetrieveRouteTables(bool includeDebugOutput, Guid subscriptionId)
+    {
+        var routeTables = new List<RouteTable>();
+
+        var uri = new Uri(
+            $"/subscriptions/{subscriptionId}/providers/Microsoft.Network/routeTables?api-version=2024-05-01",
+            UriKind.Relative);
+
+        while (true)
+        {
+            var content = await ExecuteTypedCallToManagementApi<RouteTableListResult>(includeDebugOutput, null, uri);
+
+            if (content?.Value is { Length: > 0 })
+            {
+                routeTables.AddRange(content.Value);
+            }
+
+            // Follow the nextLink for paged results
+            if (string.IsNullOrEmpty(content?.NextLink))
+            {
+                break;
+            }
+
+            uri = new Uri(content.NextLink, UriKind.Absolute);
+        }
+
+        if (includeDebugOutput)
+        {
+            var json = JsonSerializer.Serialize(routeTables, jsonSerializerOptions);
+            AnsiConsole.WriteLine($"Retrieved {routeTables.Count} route tables:");
+            AnsiConsole.Write(new JsonText(json));
+            AnsiConsole.WriteLine();
+        }
+
+        return routeTables;
     }
 
     public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope)
@@ -396,4 +434,39 @@ public record SecurityAssessmentMetadataProperties(
 public record AzureResourceDetails(
     string Id,
     string Source
+);
+
+public record RouteTableListResult(
+    RouteTable[] Value,
+    string? NextLink
+);
+
+public record RouteTable(
+    string Id,
+    string Name,
+    string Type,
+    string Location,
+    Dictionary<string, string>? Tags,
+    RouteTableProperties Properties
+);
+
+public record RouteTableProperties(
+    string ProvisioningState,
+    Route[]? Routes,
+    ResourceReference[]? Subnets,
+    bool? DisableBgpRoutePropagation
+);
+
+public record Route(
+    string Id,
+    string Name,
+    string? Type,
+    RouteProperties Properties
+);
+
+public record RouteProperties(
+    string? ProvisioningState,
+    string? AddressPrefix,
+    string NextHopType,
+    string? NextHopIpAddress
 );

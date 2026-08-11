@@ -118,6 +118,58 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteRouteTables(Commands.RouteTables.Settings settings, IReadOnlyCollection<RouteTable> routeTables)
+    {
+        if (routeTables.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[yellow]No route tables found.[/]");
+
+            return Task.CompletedTask;
+        }
+
+        var table = new Table();
+        table.Border(TableBorder.Rounded);
+        table.AddColumn("Name");
+        table.AddColumn("Resource Group");
+        table.AddColumn("Location");
+        table.AddColumn("Subnets");
+        table.AddColumn("BGP Route Propagation");
+        table.AddColumn("Routes (Name AddressPrefix NextHopType NextHopIpAddress)");
+
+        foreach (var routeTable in routeTables.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
+        {
+            var subnets = routeTable.GetAttachedSubnetNames();
+            var subnetSummary = subnets.Length == 0
+                ? "[dim](none)[/]"
+                : string.Join("\n", subnets);
+
+            var bgpPropagation = routeTable.Properties.DisableBgpRoutePropagation == true
+                ? "[red]Disabled[/]"
+                : "[green]Enabled[/]";
+
+            var routes = routeTable.Properties.Routes ?? [];
+            var routeSummary = routes.Length == 0
+                ? "[dim](none)[/]"
+                : string.Join("\n", routes
+                    .OrderBy(r => r.Name)
+                    .Select(r =>
+                        $"[dim]{r.Name}[/] {r.Properties.AddressPrefix} {r.Properties.NextHopType}" +
+                        (string.IsNullOrEmpty(r.Properties.NextHopIpAddress) ? "" : $" -> {r.Properties.NextHopIpAddress}")));
+
+            table.AddRow(
+                new Markup(routeTable.Name),
+                new Markup(routeTable.GetResourceGroupName()),
+                new Markup(routeTable.Location),
+                new Markup(subnetSummary),
+                new Markup(bgpPropagation),
+                new Markup(routeSummary));
+        }
+
+        AnsiConsole.Write(table);
+
+        return Task.CompletedTask;
+    }
+
     public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
     {
         if (recommendations.Count == 0)

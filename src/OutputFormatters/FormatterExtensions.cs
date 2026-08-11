@@ -32,6 +32,20 @@ public static class FormatterExtensions
         }
     }
 
+    extension(RouteTable routeTable)
+    {
+        public string GetResourceGroupName()
+        {
+            return GetSegmentValue(routeTable.Id, "resourceGroups");
+        }
+
+        public string[] GetAttachedSubnetNames()
+        {
+            var subnets = routeTable.Properties.Subnets ?? [];
+            return GetNames(subnets, "subnets", "Subnet").ToArray();
+        }
+    }
+
     extension(AdvisorRecommendation recommendation)
     {
         public int GetImpactOrder()
