@@ -97,6 +97,42 @@ resource nsgWithConflictingRules 'Microsoft.Network/networkSecurityGroups@2025-0
   }
 }
 
+@description('This NSG has misaligned priority rules and is not associated with any NIC or Subnet.')
+resource nsgWithMisalignedPriorityRules 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
+  name: 'nsg-misaligned-priority-rules'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'DenyAllInbound'
+        properties: {
+          priority: 100
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'AllowHttpsInbound'
+        properties: {
+          priority: 200
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
+  }
+}
+
 @description('This NSG has no security rules and is associated with a NIC.')
 resource nsgNicEmpty 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-nic-empty'
@@ -228,6 +264,17 @@ resource subnetNsgConflictingRules 'Microsoft.Network/virtualNetworks/subnets@20
     addressPrefix: '10.0.4.0/24'
     networkSecurityGroup: {
       id: nsgWithConflictingRules.id
+    }
+  }
+}
+
+resource subnetNsgMisalignedPriorityRules 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = {
+  parent: vnetSecurityTest
+  name: 'subnet-nsg-misaligned-priority-rules'
+  properties: {
+    addressPrefix: '10.0.5.0/24'
+    networkSecurityGroup: {
+      id: nsgWithMisalignedPriorityRules.id
     }
   }
 }
