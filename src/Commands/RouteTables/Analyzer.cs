@@ -39,15 +39,7 @@ public class Analyzer
         public AnomalyDetectionResult? TryDetect(RouteTable routeTable)
         {
             var routes = routeTable.Properties.Routes;
-            if (routes is not { Length: > 0 })
-            {
-                return new AnomalyDetectionResult(
-                    routeTable,
-                    "This route table has no default route to a firewall.",
-                    SeverityLevel.Medium);
-            }
-
-            if (!routes.Any(IsDefaultRouteToFirewall))
+            if (routes is not { Length: > 0 } || !routes.Any(IsDefaultRouteToFirewall))
             {
                 return new AnomalyDetectionResult(
                     routeTable,

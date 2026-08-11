@@ -99,9 +99,9 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
                         $"{r.Name} {r.Properties.AddressPrefix} {r.Properties.NextHopType}" +
                         (string.IsNullOrEmpty(r.Properties.NextHopIpAddress) ? "" : $" -> {r.Properties.NextHopIpAddress}")));
 
-            if (analysisResults.Any(r => r.RouteTable.Id == routeTable.Id))
+            var routeTableAnalysisResults = analysisResults.Where(r => r.RouteTable.Id == routeTable.Id).ToList();
+            if (routeTableAnalysisResults.Count > 0)
             {
-                var routeTableAnalysisResults = analysisResults.Where(r => r.RouteTable.Id == routeTable.Id).ToList();
                 routeSummary += $"<br><br>**{(routeTableAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}**<br>{string.Join("<br>", routeTableAnalysisResults.Select(r => $"- {r.IssueDescription} ({r.Severity})"))}";
             }
 
