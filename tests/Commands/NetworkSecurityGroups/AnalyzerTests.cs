@@ -18,7 +18,7 @@ public class AnalyzerTests
         // Assert
         results.Count.Should().Be(1);
         results.Single().IssueDescription.Should().Be("This Network Security Group has no security rules defined.");
-        results.Single().Severity.Should().Be(SeverityLevel.Medium);
+        results.Single().Severity.Should().Be(SeverityLevel.High);
     }
 
     [Fact]
@@ -311,8 +311,38 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze([nsg]);
 
         // Assert
-        results.Select(r => r.IssueDescription).Should().Contain("This Network Security Group has conflicting security rules: 'AllowHttpInbound' and 'DenyHttpInbound'.");
-        results.Single(r => r.IssueDescription.Contains("conflicting security rules", StringComparison.OrdinalIgnoreCase)).Severity.Should().Be(SeverityLevel.High);
+        results.Count.Should().Be(1);
+        results.Single().IssueDescription.Should().Be("This Network Security Group has conflicting security rules: 'AllowHttpInbound' and 'DenyHttpInbound'.");
+        results.Single().Severity.Should().Be(SeverityLevel.Low);
+    }
+
+    [Fact]
+    public async Task Analyze_WithMisalignedPriorityRules_ReturnsMisalignedPriorityRulesAnomaly()
+    {
+        // Arrange
+        var nsg = CreateNetworkSecurityGroup(
+            securityRules:
+            [
+                CreateSecurityRule(
+                    name: "DenyAllInbound",
+                    access: "Deny",
+                    destinationPortRange: "*",
+                    priority: 100),
+                CreateSecurityRule(
+                    name: "AllowHttpsInbound",
+                    access: "Allow",
+                    destinationPortRange: "443",
+                    priority: 200)
+            ],
+            subnets: [new ResourceReference("/subnets/s1")]);
+
+        // Act
+        var results = await Analyzer.Analyze([nsg]);
+
+        // Assert
+        results.Count.Should().Be(1);
+        results.Single().IssueDescription.Should().Contain("This Network Security Group has misaligned priority rules: 'DenyAllInbound' and 'AllowHttpsInbound'.");
+        results.Single().Severity.Should().Be(SeverityLevel.Medium);
     }
 
     private static NetworkSecurityGroup CreateNetworkSecurityGroup(
@@ -346,7 +376,7 @@ public class AnalyzerTests
         int priority = 100)
     {
         return new SecurityRule(
-            Id: "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/networkSecurityGroups/nsg1/securityRules/r1",
+            Id: $"/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/networkSecurityGroups/nsg1/securityRules/{name}",
             Name: name,
             Type: "Microsoft.Network/networkSecurityGroups/securityRules",
             Properties: new SecurityRuleProperties(

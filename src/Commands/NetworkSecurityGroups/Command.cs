@@ -31,6 +31,7 @@ public class Command(IAzureResourceRetriever azureResourceRetriever) : AsyncComm
                 settings.Debug, settings.Subscription!.Value);
 
             ctx.Status = $"Retrieved {networkSecurityGroups.Count} network security groups.";
+            
             var analysisResults = await Analyzer.Analyze(networkSecurityGroups);
 
             // Write the output

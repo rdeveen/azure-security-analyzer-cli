@@ -8,6 +8,7 @@ public class Analyzer
     [
         new MissingSecurityRulesRule(),
         new ConflictingSecurityRulesRule(),
+        new MisalignedPriorityRulesRule(),
         new NoDenySecurityRulesRule(),
         new AllowsAllTrafficRule(),
         new AllowsInternetInboundCommonPortsRule(),
@@ -114,6 +115,34 @@ public class Analyzer
                             SeverityLevel.Low);
                     }
                 }
+            }
+
+            return null;
+        }
+    }
+
+    private sealed class MisalignedPriorityRulesRule : INetworkSecurityGroupAnomalyRule
+    {
+        public AnomalyDetectionResult? TryDetect(NetworkSecurityGroup networkSecurityGroup)
+        {
+            var securityRules = networkSecurityGroup.Properties.SecurityRules?.OrderBy(r => r.Properties.Priority).ToArray();
+            if (securityRules is not { Length: > 1 })
+            {
+                return null;
+            }
+
+            var previousRule = securityRules[0];
+
+            for (var i = 1; i < securityRules.Length; i++)
+            {
+                if (securityRules[i].Properties.Access == "Allow" && previousRule.Properties.Access == "Deny" && securityRules[i].Properties.Priority > previousRule.Properties.Priority)
+                {
+                    return new AnomalyDetectionResult(
+                        networkSecurityGroup,
+                        $"This Network Security Group has misaligned priority rules: '{previousRule.Name}' and '{securityRules[i].Name}'. This could unintentionally block traffic that should be allowed.",
+                        SeverityLevel.Medium);
+                }
+                previousRule = securityRules[i];
             }
 
             return null;
