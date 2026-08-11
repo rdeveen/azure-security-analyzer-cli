@@ -51,6 +51,28 @@ public class JsonOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteRouteTables(Commands.RouteTables.Settings settings, IReadOnlyCollection<RouteTable> routeTables, IReadOnlyCollection<Commands.RouteTables.AnomalyDetectionResult> analysisResults)
+    {
+        var output = routeTables.Select(routeTable =>
+        {
+            var routeTableAnalysisResults = analysisResults.Where(r => r.RouteTable.Id == routeTable.Id).ToList();
+
+            return new
+            {
+                RouteTable = routeTable,
+                Anomalies = routeTableAnalysisResults.Select(r => new
+                {
+                    r.IssueDescription,
+                    r.Severity
+                }).ToList()
+            };
+        }).ToList();
+
+        WriteJson(settings, output);
+
+        return Task.CompletedTask;
+    }
+
     private static void WriteJson(Commands.ICommandSettings settings, object items)
     {
         var options = new JsonSerializerOptions { WriteIndented = true };

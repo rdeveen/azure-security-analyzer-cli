@@ -118,6 +118,86 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteRouteTables(Commands.RouteTables.Settings settings, IReadOnlyCollection<RouteTable> routeTables, IReadOnlyCollection<Commands.RouteTables.AnomalyDetectionResult> analysisResults)
+    {
+        if (routeTables.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[yellow]No route tables found.[/]");
+
+            return Task.CompletedTask;
+        }
+
+        var table = new Table();
+        table.Border(TableBorder.Rounded);
+        table.AddColumn("Name");
+        table.AddColumn("Resource Group");
+        table.AddColumn("Location");
+        table.AddColumn("Subnets");
+        table.AddColumn("BGP Route Propagation");
+        table.AddColumn("Routes (Name AddressPrefix NextHopType NextHopIpAddress)");
+
+        foreach (var routeTable in routeTables.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
+        {
+            var subnets = routeTable.GetAttachedSubnetNames();
+            var subnetSummary = subnets.Length == 0
+                ? "[dim](none)[/]"
+                : string.Join("\n", subnets);
+
+            var bgpPropagation = routeTable.Properties.DisableBgpRoutePropagation == true
+                ? "[red]Disabled[/]"
+                : "[green]Enabled[/]";
+
+            var routes = routeTable.Properties.Routes ?? [];
+            var routeSummary = routes.Length == 0
+                ? "[dim](none)[/]"
+                : string.Join("\n", routes
+                    .OrderBy(r => r.Name)
+                    .Select(r =>
+                        $"[dim]{r.Name}[/] {r.Properties.AddressPrefix} {r.Properties.NextHopType}" +
+                        (string.IsNullOrEmpty(r.Properties.NextHopIpAddress) ? "" : $" -> {r.Properties.NextHopIpAddress}")));
+
+            table.AddRow(
+                new Markup(routeTable.Name),
+                new Markup(routeTable.GetResourceGroupName()),
+                new Markup(routeTable.Location),
+                new Markup(subnetSummary),
+                new Markup(bgpPropagation),
+                new Markup(routeSummary));
+
+            var routeTableAnalysisResults = analysisResults
+                .Where(r => r.RouteTable.Id == routeTable.Id)
+                .ToList();
+
+            if (routeTableAnalysisResults.Count > 0)
+            {
+                var anomalyTable = new Table();
+                anomalyTable.Border(TableBorder.Rounded);
+                anomalyTable.AddColumn($"[red]{(routeTableAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}[/]");
+                anomalyTable.AddColumn($"Issue Description [dim]({routeTableAnalysisResults.Count} issue{(routeTableAnalysisResults.Count != 1 ? "s" : "")})[/]");
+
+                foreach (var result in routeTableAnalysisResults)
+                {
+                    anomalyTable.AddRow(
+                        new Markup(result.Severity switch
+                        {
+                            Commands.RouteTables.SeverityLevel.High => "[red]High[/]",
+                            Commands.RouteTables.SeverityLevel.Medium => "[orange1]Medium[/]",
+                            Commands.RouteTables.SeverityLevel.Low => "[yellow]Low[/]",
+                            _ => "[dim]Unknown[/]"
+                        }),
+                        new Markup(result.IssueDescription)
+                    );
+                }
+
+                table.AddRow(new Markup(""), new Markup(""), new Markup(""), new Markup(""), new Markup(""), anomalyTable);
+            }
+        }
+
+        AnsiConsole.Write(table);
+
+        return Task.CompletedTask;
+    }
+
     public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
     {
         if (recommendations.Count == 0)

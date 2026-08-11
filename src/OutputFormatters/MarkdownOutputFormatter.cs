@@ -69,6 +69,48 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteRouteTables(Commands.RouteTables.Settings settings, IReadOnlyCollection<RouteTable> routeTables, IReadOnlyCollection<Commands.RouteTables.AnomalyDetectionResult> analysisResults)
+    {
+        if (routeTables.Count == 0)
+        {
+            Console.WriteLine("No route tables found.");
+
+            return Task.CompletedTask;
+        }
+
+        Console.WriteLine("# Route Tables");
+        Console.WriteLine();
+        Console.WriteLine("|Name|Resource Group|Location|Subnets|BGP Route Propagation|Routes (Name AddressPrefix NextHopType NextHopIpAddress)|");
+        Console.WriteLine("|---|---|---|---|---|---|");
+
+        foreach (var routeTable in routeTables.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
+        {
+            var subnets = routeTable.GetAttachedSubnetNames();
+            var subnetSummary = subnets.Length == 0 ? "(none)" : string.Join("<br>", subnets);
+
+            var bgpPropagation = routeTable.Properties.DisableBgpRoutePropagation == true ? "Disabled" : "Enabled";
+
+            var routes = routeTable.Properties.Routes ?? [];
+            var routeSummary = routes.Length == 0
+                ? "(none)"
+                : string.Join("<br>", routes
+                    .OrderBy(r => r.Name)
+                    .Select(r =>
+                        $"{r.Name} {r.Properties.AddressPrefix} {r.Properties.NextHopType}" +
+                        (string.IsNullOrEmpty(r.Properties.NextHopIpAddress) ? "" : $" -> {r.Properties.NextHopIpAddress}")));
+
+            var routeTableAnalysisResults = analysisResults.Where(r => r.RouteTable.Id == routeTable.Id).ToList();
+            if (routeTableAnalysisResults.Count > 0)
+            {
+                routeSummary += $"<br><br>**{(routeTableAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}**<br>{string.Join("<br>", routeTableAnalysisResults.Select(r => $"- {r.IssueDescription} ({r.Severity})"))}";
+            }
+
+            Console.WriteLine($"|{routeTable.Name}|{routeTable.GetResourceGroupName()}|{routeTable.Location}|{subnetSummary}|{bgpPropagation}|{routeSummary}|");
+        }
+
+        return Task.CompletedTask;
+    }
+
     public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
     {
         if (recommendations.Count == 0)
