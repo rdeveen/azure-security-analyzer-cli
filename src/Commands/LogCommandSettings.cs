@@ -3,7 +3,7 @@ using Spectre.Console.Cli;
 
 namespace AzureSecurityAnalyzer.Commands;
 
-public class LogCommandSettings : CommandSettings
+public class LogCommandSettings : Spectre.Console.Cli.CommandSettings
 {
     [CommandOption("--debug")]
     [Description("Increase logging verbosity to show all debug logs.")]

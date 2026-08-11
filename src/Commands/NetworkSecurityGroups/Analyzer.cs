@@ -47,7 +47,7 @@ public class Analyzer
                 return new AnomalyDetectionResult(
                     networkSecurityGroup,
                     "This Network Security Group has no security rules defined.",
-                    SeverityLevel.Medium);
+                    SeverityLevel.High);
             }
 
             return null;
@@ -88,7 +88,7 @@ public class Analyzer
     {
         public AnomalyDetectionResult? TryDetect(NetworkSecurityGroup networkSecurityGroup)
         {
-            var securityRules = networkSecurityGroup.Properties.SecurityRules;
+            var securityRules = networkSecurityGroup.Properties.SecurityRules?.OrderBy(r => r.Properties.Priority).ToArray();
             if (securityRules is not { Length: > 1 })
             {
                 return null;
@@ -101,12 +101,17 @@ public class Analyzer
                     var rule1 = securityRules[i];
                     var rule2 = securityRules[j];
 
+                    if (MatchesValue(rule1.Id, rule2.Id))
+                    {
+                        continue;
+                    }
+
                     if (IsConflictingRulePair(rule1, rule2))
                     {
                         return new AnomalyDetectionResult(
                             networkSecurityGroup,
                             $"This Network Security Group has conflicting security rules: '{rule1.Name}' and '{rule2.Name}'.",
-                            SeverityLevel.High);
+                            SeverityLevel.Low);
                     }
                 }
             }
@@ -226,16 +231,10 @@ public class Analyzer
         MatchesValue(securityRule.Properties.Access, "Deny");
 
     private static bool IsConflictingRulePair(SecurityRule rule1, SecurityRule rule2) =>
-        !MatchesValue(rule1.Properties.Access, rule2.Properties.Access)
-        && MatchesRuleScope(rule1, rule2);
-
-    private static bool MatchesRuleScope(SecurityRule rule1, SecurityRule rule2) =>
-        MatchesValue(rule1.Properties.Direction, rule2.Properties.Direction)
-        && MatchesValue(rule1.Properties.Protocol, rule2.Properties.Protocol)
-        && MatchesNormalizedValues(rule1.Properties.SourceAddressPrefix, rule1.Properties.SourceAddressPrefixes, rule2.Properties.SourceAddressPrefix, rule2.Properties.SourceAddressPrefixes)
-        && MatchesNormalizedValues(rule1.Properties.DestinationAddressPrefix, rule1.Properties.DestinationAddressPrefixes, rule2.Properties.DestinationAddressPrefix, rule2.Properties.DestinationAddressPrefixes)
-        && MatchesNormalizedValues(rule1.Properties.SourcePortRange, rule1.Properties.SourcePortRanges, rule2.Properties.SourcePortRange, rule2.Properties.SourcePortRanges)
-        && MatchesNormalizedValues(rule1.Properties.DestinationPortRange, rule1.Properties.DestinationPortRanges, rule2.Properties.DestinationPortRange, rule2.Properties.DestinationPortRanges);
+        MatchesValue(rule1.Properties.SourceAddressPrefix, rule2.Properties.SourceAddressPrefix)
+        && MatchesValue(rule1.Properties.DestinationAddressPrefix, rule2.Properties.DestinationAddressPrefix)
+        && MatchesValue(rule1.Properties.DestinationPortRange, rule2.Properties.DestinationPortRange)
+        && !MatchesValue(rule1.Properties.Access, rule2.Properties.Access);
 
     private static bool IsAnySourceAddress(SecurityRule securityRule) =>
         MatchesValue(securityRule.Properties.SourceAddressPrefix, "*") || ContainsValue(securityRule.Properties.SourceAddressPrefixes, "*");
@@ -249,36 +248,16 @@ public class Analyzer
     private static bool IsAnyDestinationPort(SecurityRule securityRule) =>
         MatchesValue(securityRule.Properties.DestinationPortRange, "*") || ContainsValue(securityRule.Properties.DestinationPortRanges, "*");
 
-    private static bool MatchesValue(string? value, string expectedValue) =>
+    private static bool MatchesValue(string? value, string? expectedValue) =>
         string.Equals(value, expectedValue, StringComparison.OrdinalIgnoreCase);
-
-    private static bool MatchesNormalizedValues(string? value1, string[]? values1, string? value2, string[]? values2)
-    {
-        var normalizedValues1 = NormalizeValues(value1, values1);
-        var normalizedValues2 = NormalizeValues(value2, values2);
-
-        if (normalizedValues1.Length != normalizedValues2.Length)
-        {
-            return false;
-        }
-
-        return normalizedValues1
-            .OrderBy(v => v, StringComparer.OrdinalIgnoreCase)
-            .SequenceEqual(normalizedValues2.OrderBy(v => v, StringComparer.OrdinalIgnoreCase), StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static string[] NormalizeValues(string? value, string[]? values) =>
-        !string.IsNullOrWhiteSpace(value)
-            ? [value]
-            : values?.Where(v => !string.IsNullOrWhiteSpace(v)).ToArray() ?? [];
 
     private static bool ContainsValue(string[]? values, string expectedValue) =>
         values?.Any(v => string.Equals(v, expectedValue, StringComparison.OrdinalIgnoreCase)) ?? false;
 }
 
 public record AnomalyDetectionResult(
-    NetworkSecurityGroup NetworkSecurityGroup, 
-    string IssueDescription, 
+    NetworkSecurityGroup NetworkSecurityGroup,
+    string IssueDescription,
     SeverityLevel Severity);
 
 public enum SeverityLevel

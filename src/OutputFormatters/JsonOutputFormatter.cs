@@ -51,7 +51,7 @@ public class JsonOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
-    private static void WriteJson(Commands.ICostSettings settings, object items)
+    private static void WriteJson(Commands.ICommandSettings settings, object items)
     {
         var options = new JsonSerializerOptions { WriteIndented = true };
         options.Converters.Add(new JsonStringEnumConverter());

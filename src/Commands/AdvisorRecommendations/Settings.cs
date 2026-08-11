@@ -3,7 +3,7 @@ using Spectre.Console.Cli;
 
 namespace AzureSecurityAnalyzer.Commands.AdvisorRecommendations;
 
-public class Settings : CostSettings
+public class Settings : CommandSettings
 {
     [CommandOption("-g|--resource-group")]
     [Description("The resource group to scope the request to. Need to be used in combination with the subscription id.")]
