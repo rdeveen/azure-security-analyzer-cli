@@ -48,6 +48,55 @@ resource nsgWithAllowAll 'Microsoft.Network/networkSecurityGroups@2025-07-01' = 
   }
 }
 
+@description('This NSG has conflicting inbound rules for HTTP traffic and is not associated with any NIC or Subnet.')
+resource nsgWithConflictingRules 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
+  name: 'nsg-conflicting-rules'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'AllowHttpInbound'
+        properties: {
+          priority: 100
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '80'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'AllowHttpsInbound'
+        properties: {
+          priority: 200
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'DenyHttpInbound'
+        properties: {
+          priority: 300
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '80'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
+  }
+}
+
 @description('This NSG has no security rules and is associated with a NIC.')
 resource nsgNicEmpty 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-nic-empty'
@@ -168,6 +217,17 @@ resource subnetNsgAllowAll 'Microsoft.Network/virtualNetworks/subnets@2025-07-01
     addressPrefix: '10.0.2.0/24'
     networkSecurityGroup: {
       id: nsgSubnetAllowAll.id
+    }
+  }
+}
+
+resource subnetNsgConflictingRules 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = {
+  parent: vnetSecurityTest
+  name: 'subnet-nsg-conflicting-rules'
+  properties: {
+    addressPrefix: '10.0.4.0/24'
+    networkSecurityGroup: {
+      id: nsgWithConflictingRules.id
     }
   }
 }

@@ -3,13 +3,13 @@ using Spectre.Console.Cli;
 
 namespace AzureSecurityAnalyzer.Commands;
 
-public interface ICostSettings
+public interface ICommandSettings
 {
     bool SkipHeader { get; set; }
     OutputFormat Output { get; set; }
 }
 
-public class CostSettings : LogCommandSettings, ICostSettings
+public class CommandSettings : LogCommandSettings, ICommandSettings
 {
     [CommandOption("-s|--subscription")]
     [Description("The subscription id to use. Will try to fetch the active id if not specified.")]

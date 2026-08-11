@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using Azure.Core;
 using Azure.Identity;
 using AzureSecurityAnalyzer.Commands;
-using AzureSecurityAnalyzer.Commands.AdvisorRecommendations;
 using AzureSecurityAnalyzer.OutputFormatters;
 using Spectre.Console;
 using Spectre.Console.Json;

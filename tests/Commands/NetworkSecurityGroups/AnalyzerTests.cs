@@ -18,7 +18,7 @@ public class AnalyzerTests
         // Assert
         results.Count.Should().Be(1);
         results.Single().IssueDescription.Should().Be("This Network Security Group has no security rules defined.");
-        results.Single().Severity.Should().Be(SeverityLevel.Medium);
+        results.Single().Severity.Should().Be(SeverityLevel.High);
     }
 
     [Fact]
@@ -282,6 +282,69 @@ public class AnalyzerTests
         results.Single().Severity.Should().Be(SeverityLevel.Medium);
     }
 
+    [Fact]
+    public async Task Analyze_WithConflictingRules_ReturnsConflictingRulesAnomaly()
+    {
+        // Arrange
+        var nsg = CreateNetworkSecurityGroup(
+            securityRules:
+            [
+                CreateSecurityRule(
+                    name: "AllowHttpInbound",
+                    access: "Allow",
+                    destinationPortRange: "80",
+                    priority: 100),
+                CreateSecurityRule(
+                    name: "AllowHttpsInbound",
+                    access: "Allow",
+                    destinationPortRange: "443",
+                    priority: 200),
+                CreateSecurityRule(
+                    name: "DenyHttpInbound",
+                    access: "Deny",
+                    destinationPortRange: "80",
+                    priority: 300)
+            ],
+            subnets: [new ResourceReference("/subnets/s1")]);
+
+        // Act
+        var results = await Analyzer.Analyze([nsg]);
+
+        // Assert
+        results.Count.Should().Be(1);
+        results.Single().IssueDescription.Should().Be("This Network Security Group has conflicting security rules: 'AllowHttpInbound' and 'DenyHttpInbound'.");
+        results.Single().Severity.Should().Be(SeverityLevel.Low);
+    }
+
+    [Fact]
+    public async Task Analyze_WithMisalignedPriorityRules_ReturnsMisalignedPriorityRulesAnomaly()
+    {
+        // Arrange
+        var nsg = CreateNetworkSecurityGroup(
+            securityRules:
+            [
+                CreateSecurityRule(
+                    name: "DenyAllInbound",
+                    access: "Deny",
+                    destinationPortRange: "*",
+                    priority: 100),
+                CreateSecurityRule(
+                    name: "AllowHttpsInbound",
+                    access: "Allow",
+                    destinationPortRange: "443",
+                    priority: 200)
+            ],
+            subnets: [new ResourceReference("/subnets/s1")]);
+
+        // Act
+        var results = await Analyzer.Analyze([nsg]);
+
+        // Assert
+        results.Count.Should().Be(1);
+        results.Single().IssueDescription.Should().Contain("This Network Security Group has misaligned priority rules: 'DenyAllInbound' and 'AllowHttpsInbound'.");
+        results.Single().Severity.Should().Be(SeverityLevel.Medium);
+    }
+
     private static NetworkSecurityGroup CreateNetworkSecurityGroup(
         SecurityRule[]? securityRules,
         ResourceReference[]? subnets,
@@ -303,16 +366,18 @@ public class AnalyzerTests
     }
 
     private static SecurityRule CreateSecurityRule(
+        string name = "r1",
         string access = "Allow",
         string direction = "Inbound",
         string sourcePortRange = "*",
         string destinationPortRange = "*",
         string sourceAddressPrefix = "*",
-        string destinationAddressPrefix = "*")
+        string destinationAddressPrefix = "*",
+        int priority = 100)
     {
         return new SecurityRule(
-            Id: "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/networkSecurityGroups/nsg1/securityRules/r1",
-            Name: "r1",
+            Id: $"/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/networkSecurityGroups/nsg1/securityRules/{name}",
+            Name: name,
             Type: "Microsoft.Network/networkSecurityGroups/securityRules",
             Properties: new SecurityRuleProperties(
                 ProvisioningState: "Succeeded",
@@ -323,7 +388,7 @@ public class AnalyzerTests
                 SourceAddressPrefix: sourceAddressPrefix,
                 DestinationAddressPrefix: destinationAddressPrefix,
                 Access: access,
-                Priority: 100,
+                Priority: priority,
                 Direction: direction,
                 SourcePortRanges: null,
                 DestinationPortRanges: null,

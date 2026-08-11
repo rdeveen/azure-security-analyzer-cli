@@ -1,5 +1,5 @@
 namespace AzureSecurityAnalyzer.Commands.NetworkSecurityGroups;
 
-public class Settings : CostSettings
+public class Settings : CommandSettings
 {
 }

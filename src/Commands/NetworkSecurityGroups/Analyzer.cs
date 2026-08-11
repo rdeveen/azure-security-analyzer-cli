@@ -7,6 +7,8 @@ public class Analyzer
     private static readonly IReadOnlyCollection<INetworkSecurityGroupAnomalyRule> Rules =
     [
         new MissingSecurityRulesRule(),
+        new ConflictingSecurityRulesRule(),
+        new MisalignedPriorityRulesRule(),
         new NoDenySecurityRulesRule(),
         new AllowsAllTrafficRule(),
         new AllowsInternetInboundCommonPortsRule(),
@@ -46,7 +48,7 @@ public class Analyzer
                 return new AnomalyDetectionResult(
                     networkSecurityGroup,
                     "This Network Security Group has no security rules defined.",
-                    SeverityLevel.Medium);
+                    SeverityLevel.High);
             }
 
             return null;
@@ -77,6 +79,70 @@ public class Analyzer
                     networkSecurityGroup,
                     "This Network Security Group has security rules that allow all inbound and all outbound traffic.",
                     SeverityLevel.High);
+            }
+
+            return null;
+        }
+    }
+
+    private sealed class ConflictingSecurityRulesRule : INetworkSecurityGroupAnomalyRule
+    {
+        public AnomalyDetectionResult? TryDetect(NetworkSecurityGroup networkSecurityGroup)
+        {
+            var securityRules = networkSecurityGroup.Properties.SecurityRules?.OrderBy(r => r.Properties.Priority).ToArray();
+            if (securityRules is not { Length: > 1 })
+            {
+                return null;
+            }
+
+            for (var i = 0; i < securityRules.Length - 1; i++)
+            {
+                for (var j = i + 1; j < securityRules.Length; j++)
+                {
+                    var rule1 = securityRules[i];
+                    var rule2 = securityRules[j];
+
+                    if (MatchesValue(rule1.Id, rule2.Id))
+                    {
+                        continue;
+                    }
+
+                    if (IsConflictingRulePair(rule1, rule2))
+                    {
+                        return new AnomalyDetectionResult(
+                            networkSecurityGroup,
+                            $"This Network Security Group has conflicting security rules: '{rule1.Name}' and '{rule2.Name}'.",
+                            SeverityLevel.Low);
+                    }
+                }
+            }
+
+            return null;
+        }
+    }
+
+    private sealed class MisalignedPriorityRulesRule : INetworkSecurityGroupAnomalyRule
+    {
+        public AnomalyDetectionResult? TryDetect(NetworkSecurityGroup networkSecurityGroup)
+        {
+            var securityRules = networkSecurityGroup.Properties.SecurityRules?.OrderBy(r => r.Properties.Priority).ToArray();
+            if (securityRules is not { Length: > 1 })
+            {
+                return null;
+            }
+
+            var previousRule = securityRules[0];
+
+            for (var i = 1; i < securityRules.Length; i++)
+            {
+                if (securityRules[i].Properties.Access == "Allow" && previousRule.Properties.Access == "Deny" && securityRules[i].Properties.Priority > previousRule.Properties.Priority)
+                {
+                    return new AnomalyDetectionResult(
+                        networkSecurityGroup,
+                        $"This Network Security Group has misaligned priority rules: '{previousRule.Name}' and '{securityRules[i].Name}'. This could unintentionally block traffic that should be allowed.",
+                        SeverityLevel.Medium);
+                }
+                previousRule = securityRules[i];
             }
 
             return null;
@@ -193,6 +259,12 @@ public class Analyzer
     private static bool IsDenyRule(SecurityRule securityRule) =>
         MatchesValue(securityRule.Properties.Access, "Deny");
 
+    private static bool IsConflictingRulePair(SecurityRule rule1, SecurityRule rule2) =>
+        MatchesValue(rule1.Properties.SourceAddressPrefix, rule2.Properties.SourceAddressPrefix)
+        && MatchesValue(rule1.Properties.DestinationAddressPrefix, rule2.Properties.DestinationAddressPrefix)
+        && MatchesValue(rule1.Properties.DestinationPortRange, rule2.Properties.DestinationPortRange)
+        && !MatchesValue(rule1.Properties.Access, rule2.Properties.Access);
+
     private static bool IsAnySourceAddress(SecurityRule securityRule) =>
         MatchesValue(securityRule.Properties.SourceAddressPrefix, "*") || ContainsValue(securityRule.Properties.SourceAddressPrefixes, "*");
 
@@ -205,7 +277,7 @@ public class Analyzer
     private static bool IsAnyDestinationPort(SecurityRule securityRule) =>
         MatchesValue(securityRule.Properties.DestinationPortRange, "*") || ContainsValue(securityRule.Properties.DestinationPortRanges, "*");
 
-    private static bool MatchesValue(string? value, string expectedValue) =>
+    private static bool MatchesValue(string? value, string? expectedValue) =>
         string.Equals(value, expectedValue, StringComparison.OrdinalIgnoreCase);
 
     private static bool ContainsValue(string[]? values, string expectedValue) =>
@@ -213,8 +285,8 @@ public class Analyzer
 }
 
 public record AnomalyDetectionResult(
-    NetworkSecurityGroup NetworkSecurityGroup, 
-    string IssueDescription, 
+    NetworkSecurityGroup NetworkSecurityGroup,
+    string IssueDescription,
     SeverityLevel Severity);
 
 public enum SeverityLevel
