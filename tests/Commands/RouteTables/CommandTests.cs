@@ -120,6 +120,45 @@ public class CommandTests
         mockAzureResourceRetriever.Verify(r => r.RetrieveRouteTables(It.IsAny<bool>(), subscriptionId), Times.Once);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_WithRouteTableAnalyzerScenarios_ReturnsZero()
+    {
+        // Arrange
+        var subscriptionId = Guid.NewGuid();
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveRouteTables(It.IsAny<bool>(), subscriptionId))
+            .ReturnsAsync(
+            [
+                CreateRouteTable(
+                    name: "rt-firewall",
+                    routes:
+                    [
+                        CreateRoute(
+                            name: "defaultToFirewall",
+                            addressPrefix: "0.0.0.0/0",
+                            nextHopType: "VirtualAppliance",
+                            nextHopIpAddress: "10.0.0.4")
+                    ]),
+                CreateRouteTable(
+                    name: "rt-internet",
+                    routes:
+                    [
+                        CreateRoute(
+                            name: "defaultToInternet",
+                            addressPrefix: "0.0.0.0/0",
+                            nextHopType: "Internet")
+                    ],
+                    subnets: [])
+            ]);
+        var settings = new Settings { Quiet = true, Subscription = subscriptionId, Output = OutputFormat.Json };
+
+        // Act
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
+
+        // Assert
+        result.Should().Be(0);
+    }
+
     [Theory]
     [InlineData(OutputFormat.Console)]
     [InlineData(OutputFormat.Json)]
@@ -185,7 +224,10 @@ public class CommandTests
         }
     }
 
-    private static RouteTable CreateRouteTable(string name = "rt1") => new(
+    private static RouteTable CreateRouteTable(
+        string name = "rt1",
+        Route[]? routes = null,
+        ResourceReference[]? subnets = null) => new(
         Id: $"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg1/providers/Microsoft.Network/routeTables/{name}",
         Name: name,
         Type: "Microsoft.Network/routeTables",
@@ -193,20 +235,27 @@ public class CommandTests
         Tags: null,
         Properties: new RouteTableProperties(
             ProvisioningState: "Succeeded",
-            Routes:
+            Routes: routes ??
             [
-                new Route(
-                    Id: $"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg1/providers/Microsoft.Network/routeTables/{name}/routes/route1",
-                    Name: "route1",
-                    Type: "Microsoft.Network/routeTables/routes",
-                    Properties: new RouteProperties(
-                        ProvisioningState: "Succeeded",
-                        AddressPrefix: "10.0.0.0/24",
-                        NextHopType: "VirtualNetworkGateway",
-                        NextHopIpAddress: null))
+                CreateRoute()
             ],
-            Subnets: [new ResourceReference("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1/subnets/subnet1")],
+            Subnets: subnets ?? [new ResourceReference("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1/subnets/subnet1")],
             DisableBgpRoutePropagation: false));
+
+    private static Route CreateRoute(
+        string name = "route1",
+        string? addressPrefix = "10.0.0.0/24",
+        string nextHopType = "VirtualNetworkGateway",
+        string? nextHopIpAddress = null) =>
+        new(
+            Id: $"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg1/providers/Microsoft.Network/routeTables/rt1/routes/{name}",
+            Name: name,
+            Type: "Microsoft.Network/routeTables/routes",
+            Properties: new RouteProperties(
+                ProvisioningState: "Succeeded",
+                AddressPrefix: addressPrefix,
+                NextHopType: nextHopType,
+                NextHopIpAddress: nextHopIpAddress));
 
     private static CommandContext CreateCommandContext()
     {

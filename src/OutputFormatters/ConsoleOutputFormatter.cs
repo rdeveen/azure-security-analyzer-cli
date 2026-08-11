@@ -118,7 +118,7 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
-    public override Task WriteRouteTables(Commands.RouteTables.Settings settings, IReadOnlyCollection<RouteTable> routeTables)
+    public override Task WriteRouteTables(Commands.RouteTables.Settings settings, IReadOnlyCollection<RouteTable> routeTables, IReadOnlyCollection<Commands.RouteTables.AnomalyDetectionResult> analysisResults)
     {
         if (routeTables.Count == 0)
         {
@@ -163,6 +163,34 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
                 new Markup(subnetSummary),
                 new Markup(bgpPropagation),
                 new Markup(routeSummary));
+
+            var routeTableAnalysisResults = analysisResults
+                .Where(r => r.RouteTable.Id == routeTable.Id)
+                .ToList();
+
+            if (routeTableAnalysisResults.Count > 0)
+            {
+                var anomalyTable = new Table();
+                anomalyTable.Border(TableBorder.Rounded);
+                anomalyTable.AddColumn($"[red]{(routeTableAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}[/]");
+                anomalyTable.AddColumn($"Issue Description [dim]({routeTableAnalysisResults.Count} issue{(routeTableAnalysisResults.Count != 1 ? "s" : "")})[/]");
+
+                foreach (var result in routeTableAnalysisResults)
+                {
+                    anomalyTable.AddRow(
+                        new Markup(result.Severity switch
+                        {
+                            Commands.RouteTables.SeverityLevel.High => "[red]High[/]",
+                            Commands.RouteTables.SeverityLevel.Medium => "[orange1]Medium[/]",
+                            Commands.RouteTables.SeverityLevel.Low => "[yellow]Low[/]",
+                            _ => "[dim]Unknown[/]"
+                        }),
+                        new Markup(result.IssueDescription)
+                    );
+                }
+
+                table.AddRow(new Markup(""), new Markup(""), new Markup(""), new Markup(""), new Markup(""), anomalyTable);
+            }
         }
 
         AnsiConsole.Write(table);

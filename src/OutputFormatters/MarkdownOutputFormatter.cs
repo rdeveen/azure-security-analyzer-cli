@@ -69,7 +69,7 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
-    public override Task WriteRouteTables(Commands.RouteTables.Settings settings, IReadOnlyCollection<RouteTable> routeTables)
+    public override Task WriteRouteTables(Commands.RouteTables.Settings settings, IReadOnlyCollection<RouteTable> routeTables, IReadOnlyCollection<Commands.RouteTables.AnomalyDetectionResult> analysisResults)
     {
         if (routeTables.Count == 0)
         {
@@ -98,6 +98,12 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
                     .Select(r =>
                         $"{r.Name} {r.Properties.AddressPrefix} {r.Properties.NextHopType}" +
                         (string.IsNullOrEmpty(r.Properties.NextHopIpAddress) ? "" : $" -> {r.Properties.NextHopIpAddress}")));
+
+            if (analysisResults.Any(r => r.RouteTable.Id == routeTable.Id))
+            {
+                var routeTableAnalysisResults = analysisResults.Where(r => r.RouteTable.Id == routeTable.Id).ToList();
+                routeSummary += $"<br><br>**{(routeTableAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}**<br>{string.Join("<br>", routeTableAnalysisResults.Select(r => $"- {r.IssueDescription} ({r.Severity})"))}";
+            }
 
             Console.WriteLine($"|{routeTable.Name}|{routeTable.GetResourceGroupName()}|{routeTable.Location}|{subnetSummary}|{bgpPropagation}|{routeSummary}|");
         }

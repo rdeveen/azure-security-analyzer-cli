@@ -32,9 +32,11 @@ public class Command(IAzureResourceRetriever azureResourceRetriever) : AsyncComm
 
             ctx.Status = $"Retrieved {routeTables.Count} route tables.";
 
+            var analysisResults = await Analyzer.Analyze(routeTables);
+
             // Write the output
             await outputFormatters[settings.Output]
-                .WriteRouteTables(settings, routeTables);
+                .WriteRouteTables(settings, routeTables, analysisResults);
         });
 
         return 0;

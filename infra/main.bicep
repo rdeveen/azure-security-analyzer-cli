@@ -288,6 +288,83 @@ resource subnetNsgNone 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = 
   }
 }
 
+@description('This route table has a default route to a firewall and is associated with a subnet.')
+resource routeTableFirewall 'Microsoft.Network/routeTables@2025-07-01' = {
+  name: 'rt-firewall'
+  location: location
+  properties: {
+    disableBgpRoutePropagation: false
+    routes: [
+      {
+        name: 'default-to-firewall'
+        properties: {
+          addressPrefix: '0.0.0.0/0'
+          nextHopType: 'VirtualAppliance'
+          nextHopIpAddress: '10.0.0.4'
+        }
+      }
+    ]
+  }
+}
+
+@description('This route table has a default route directly to the internet and is not associated with a subnet.')
+resource routeTableInternet 'Microsoft.Network/routeTables@2025-07-01' = {
+  name: 'rt-internet'
+  location: location
+  properties: {
+    disableBgpRoutePropagation: false
+    routes: [
+      {
+        name: 'default-to-internet'
+        properties: {
+          addressPrefix: '0.0.0.0/0'
+          nextHopType: 'Internet'
+        }
+      }
+    ]
+  }
+}
+
+@description('This route table has no default route to a firewall and is associated with a subnet.')
+resource routeTableMissingFirewall 'Microsoft.Network/routeTables@2025-07-01' = {
+  name: 'rt-missing-firewall'
+  location: location
+  properties: {
+    disableBgpRoutePropagation: false
+    routes: [
+      {
+        name: 'internal-route'
+        properties: {
+          addressPrefix: '10.1.0.0/16'
+          nextHopType: 'VirtualNetworkGateway'
+        }
+      }
+    ]
+  }
+}
+
+resource subnetRouteTableFirewall 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = {
+  parent: vnetSecurityTest
+  name: 'subnet-rt-firewall'
+  properties: {
+    addressPrefix: '10.0.6.0/24'
+    routeTable: {
+      id: routeTableFirewall.id
+    }
+  }
+}
+
+resource subnetRouteTableMissingFirewall 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = {
+  parent: vnetSecurityTest
+  name: 'subnet-rt-missing-firewall'
+  properties: {
+    addressPrefix: '10.0.7.0/24'
+    routeTable: {
+      id: routeTableMissingFirewall.id
+    }
+  }
+}
+
 resource nicNsgEmpty 'Microsoft.Network/networkInterfaces@2025-07-01' = {
   name: 'nic-nsg-empty'
   location: location
