@@ -32,8 +32,8 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
 
         Console.WriteLine("# Network Security Groups");
         Console.WriteLine();
-        Console.WriteLine("|Name|Resource Group|Location|Attached|Security Rules (Priority Access Direction Protocol Source:Port -> Destination:Port)|");
-        Console.WriteLine("|---|---|---|---|---|");
+        Console.WriteLine("|Name|Resource Group|Attached|Security Rules (Priority Access Direction Protocol Source:Port -> Destination:Port)|");
+        Console.WriteLine("|---|---|---|---|");
 
         foreach (var nsg in networkSecurityGroups.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
         {
@@ -63,7 +63,7 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
                 ruleSummary += $"<br><br>**{(nsgAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}**<br>{string.Join("<br>", nsgAnalysisResults.Select(r => $"- {r.IssueDescription} ({r.Severity})"))}";
             }
 
-            Console.WriteLine($"|{nsg.Name}|{nsg.GetResourceGroupName()}|{nsg.Location}|{attachedSummary}|{ruleSummary}|");
+            Console.WriteLine($"|{nsg.Name}|{nsg.GetResourceGroupName()}|{attachedSummary}|{ruleSummary}|");
         }
 
         return Task.CompletedTask;
@@ -80,8 +80,8 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
 
         Console.WriteLine("# Route Tables");
         Console.WriteLine();
-        Console.WriteLine("|Name|Resource Group|Location|Subnets|BGP Route Propagation|Routes (Name AddressPrefix NextHopType NextHopIpAddress)|");
-        Console.WriteLine("|---|---|---|---|---|---|");
+        Console.WriteLine("|Name|Resource Group|Subnets|BGP Route Propagation|Routes (Name AddressPrefix NextHopType NextHopIpAddress)|");
+        Console.WriteLine("|---|---|---|---|---|");
 
         foreach (var routeTable in routeTables.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
         {
@@ -105,7 +105,7 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
                 routeSummary += $"<br><br>**{(routeTableAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}**<br>{string.Join("<br>", routeTableAnalysisResults.Select(r => $"- {r.IssueDescription} ({r.Severity})"))}";
             }
 
-            Console.WriteLine($"|{routeTable.Name}|{routeTable.GetResourceGroupName()}|{routeTable.Location}|{subnetSummary}|{bgpPropagation}|{routeSummary}|");
+            Console.WriteLine($"|{routeTable.Name}|{routeTable.GetResourceGroupName()}|{subnetSummary}|{bgpPropagation}|{routeSummary}|");
         }
 
         return Task.CompletedTask;

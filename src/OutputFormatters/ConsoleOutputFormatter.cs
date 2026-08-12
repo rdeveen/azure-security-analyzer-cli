@@ -14,7 +14,6 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         table.AddColumn("Region");
         table.AddColumn("Geography");
         table.AddColumn("Display Name");
-        table.AddColumn("Location");
         table.AddColumn("Sustainability");
         table.AddColumn("Compliance");
 
@@ -25,7 +24,6 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
                 new Markup(region.GeographyId),
                 new Markup((region.IsOpen ? "[green]" : "[red]") + region.DisplayName + "[/]\n[dim](" + region.Id +
                            ")[/]"),
-                new Markup(region.Location),
                 new Markup(string.Join(", ", region.SustainabilityIds.OrderBy(a => a))),
                 new Markup(string.Join(", ", region.ComplianceIds.OrderBy(a => a))));
         }
@@ -48,7 +46,6 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         table.Border(TableBorder.Rounded);
         table.AddColumn("Name");
         table.AddColumn("Resource Group");
-        table.AddColumn("Location");
         table.AddColumn("Attached");
         table.AddColumn("Security Rules (Priority Access Direction Protocol Source:Port -> Destination:Port)");
 
@@ -81,7 +78,6 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
             table.AddRow(
                 new Markup(nsg.Name),
                 new Markup(nsg.GetResourceGroupName()),
-                new Markup(nsg.Location),
                 new Markup(attachedSummary),
                 new Markup(ruleSummary));
 
@@ -131,7 +127,6 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         table.Border(TableBorder.Rounded);
         table.AddColumn("Name");
         table.AddColumn("Resource Group");
-        table.AddColumn("Location");
         table.AddColumn("Subnets");
         table.AddColumn("BGP Route Propagation");
         table.AddColumn("Routes (Name AddressPrefix NextHopType NextHopIpAddress)");
@@ -159,7 +154,6 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
             table.AddRow(
                 new Markup(routeTable.Name),
                 new Markup(routeTable.GetResourceGroupName()),
-                new Markup(routeTable.Location),
                 new Markup(subnetSummary),
                 new Markup(bgpPropagation),
                 new Markup(routeSummary));
@@ -189,7 +183,7 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
                     );
                 }
 
-                table.AddRow(new Markup(""), new Markup(""), new Markup(""), new Markup(""), new Markup(""), anomalyTable);
+                table.AddRow(new Markup(""), new Markup(""), new Markup(""), new Markup(""), anomalyTable);
             }
         }
 
