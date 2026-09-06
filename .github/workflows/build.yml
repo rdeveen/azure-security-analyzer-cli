@@ -94,6 +94,7 @@ jobs:
           only_changed_files: true
           
   run:
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     environment: azure_prod
     needs: build
