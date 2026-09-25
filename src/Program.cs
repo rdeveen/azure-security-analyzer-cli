@@ -141,9 +141,4 @@ app.Configure(config =>
 });
 
 // Run the application
-if (args.Length == 0)
-{
-    args = ["--help"];
-}
-
-return await app.RunAsync(args);
+return await app.RunAsync(args.Length == 0 ? ["--help"] : args);
