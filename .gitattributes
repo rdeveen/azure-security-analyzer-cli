@@ -1,1 +1,3 @@
 * text eol=auto
+
+.github/workflows/*.lock.yml linguist-generated=true
