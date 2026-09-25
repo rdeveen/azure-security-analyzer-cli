@@ -17,6 +17,7 @@ permissions:
   pull-requests: read
   checks: read
   actions: read
+  copilot-requests: write
 
 tools:
   github:
