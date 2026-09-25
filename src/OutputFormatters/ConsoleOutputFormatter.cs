@@ -193,6 +193,82 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteFirewallPolicies(Commands.Firewall.Settings settings, IReadOnlyCollection<FirewallPolicy> firewallPolicies, IReadOnlyCollection<Commands.Firewall.AnomalyDetectionResult> analysisResults)
+    {
+        if (firewallPolicies.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[yellow]No firewall policies found.[/]");
+
+            return Task.CompletedTask;
+        }
+
+        var table = new Table();
+        table.Border(TableBorder.Rounded);
+        table.AddColumn("Name");
+        table.AddColumn("Resource Group");
+        table.AddColumn("SKU");
+        table.AddColumn("Attached Firewalls");
+        table.AddColumn("Rule Collection Groups");
+
+        foreach (var policy in firewallPolicies.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
+        {
+            var firewalls = policy.GetAttachedFirewallNames();
+            var firewallSummary = firewalls.Length == 0
+                ? "[dim](none)[/]"
+                : string.Join("\n", firewalls);
+
+            var groups = policy.RuleCollectionGroups ?? [];
+            var groupSummary = groups.Length == 0
+                ? "[dim](none)[/]"
+                : string.Join("\n", groups
+                    .OrderBy(g => g.Properties.Priority)
+                    .Select(g =>
+                    {
+                        var ruleCount = (g.Properties.RuleCollections ?? []).Sum(rc => (rc.Rules ?? []).Length);
+                        return $"[dim]{g.Name}[/] ({ruleCount} rule{(ruleCount != 1 ? "s" : "")})";
+                    }));
+
+            table.AddRow(
+                new Markup(policy.Name),
+                new Markup(policy.GetResourceGroupName()),
+                new Markup(policy.Sku?.Tier ?? "[dim](none)[/]"),
+                new Markup(firewallSummary),
+                new Markup(groupSummary));
+
+            var policyAnalysisResults = analysisResults
+                .Where(r => r.FirewallPolicy.Id == policy.Id)
+                .ToList();
+
+            if (policyAnalysisResults.Count > 0)
+            {
+                var anomalyTable = new Table();
+                anomalyTable.Border(TableBorder.Rounded);
+                anomalyTable.AddColumn($"[red]{(policyAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}[/]");
+                anomalyTable.AddColumn($"Issue Description [dim]({policyAnalysisResults.Count} issue{(policyAnalysisResults.Count != 1 ? "s" : "")})[/]");
+
+                foreach (var result in policyAnalysisResults)
+                {
+                    anomalyTable.AddRow(
+                        new Markup(result.Severity switch
+                        {
+                            Commands.Firewall.SeverityLevel.High => "[red]High[/]",
+                            Commands.Firewall.SeverityLevel.Medium => "[orange1]Medium[/]",
+                            Commands.Firewall.SeverityLevel.Low => "[yellow]Low[/]",
+                            _ => "[dim]Unknown[/]"
+                        }),
+                        new Markup(Markup.Escape(result.IssueDescription))
+                    );
+                }
+
+                table.AddRow(new Markup(""), new Markup(""), new Markup(""), new Markup(""), anomalyTable);
+            }
+        }
+
+        AnsiConsole.Write(table);
+
+        return Task.CompletedTask;
+    }
+
     public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
     {
         if (recommendations.Count == 0)

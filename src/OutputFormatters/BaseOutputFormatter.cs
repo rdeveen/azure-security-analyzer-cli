@@ -11,5 +11,7 @@ public abstract class BaseOutputFormatter
 
     public abstract Task WriteRouteTables(Commands.RouteTables.Settings settings, IReadOnlyCollection<RouteTable> routeTables, IReadOnlyCollection<Commands.RouteTables.AnomalyDetectionResult> analysisResults);
 
+    public abstract Task WriteFirewallPolicies(Commands.Firewall.Settings settings, IReadOnlyCollection<FirewallPolicy> firewallPolicies, IReadOnlyCollection<Commands.Firewall.AnomalyDetectionResult> analysisResults);
+
     public abstract Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations);
 }

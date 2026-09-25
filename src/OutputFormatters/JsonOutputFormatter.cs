@@ -73,6 +73,28 @@ public class JsonOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteFirewallPolicies(Commands.Firewall.Settings settings, IReadOnlyCollection<FirewallPolicy> firewallPolicies, IReadOnlyCollection<Commands.Firewall.AnomalyDetectionResult> analysisResults)
+    {
+        var output = firewallPolicies.Select(policy =>
+        {
+            var policyAnalysisResults = analysisResults.Where(r => r.FirewallPolicy.Id == policy.Id).ToList();
+
+            return new
+            {
+                FirewallPolicy = policy,
+                Anomalies = policyAnalysisResults.Select(r => new
+                {
+                    r.IssueDescription,
+                    r.Severity
+                }).ToList()
+            };
+        }).ToList();
+
+        WriteJson(settings, output);
+
+        return Task.CompletedTask;
+    }
+
     private static void WriteJson(Commands.ICommandSettings settings, object items)
     {
         var options = new JsonSerializerOptions { WriteIndented = true };
