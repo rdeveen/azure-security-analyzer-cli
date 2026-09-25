@@ -167,9 +167,11 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
     public async Task<IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> RetrieveFirewallPolicyRuleCollectionGroups(bool includeDebugOutput, Guid subscriptionId, string resourceGroupName, string firewallPolicyName)
     {
         var ruleCollectionGroups = new List<FirewallPolicyRuleCollectionGroup>();
+        var escapedResourceGroupName = Uri.EscapeDataString(resourceGroupName);
+        var escapedFirewallPolicyName = Uri.EscapeDataString(firewallPolicyName);
 
         var uri = new Uri(
-            $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/firewallPolicies/{firewallPolicyName}/ruleCollectionGroups?api-version=2024-10-01",
+            $"/subscriptions/{subscriptionId}/resourceGroups/{escapedResourceGroupName}/providers/Microsoft.Network/firewallPolicies/{escapedFirewallPolicyName}/ruleCollectionGroups?api-version=2024-10-01",
             UriKind.Relative);
 
         while (true)

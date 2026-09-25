@@ -35,19 +35,22 @@ public class Command(IAzureResourceRetriever azureResourceRetriever) : AsyncComm
             var firewallPolicies = await azureResourceRetriever.RetrieveFirewallPolicies(
                 settings.Debug, settings.Subscription.Value);
 
-            var ruleCollectionGroupTasks = firewallPolicies.ToDictionary(
-                p => p.Id,
-                p => azureResourceRetriever.RetrieveFirewallPolicyRuleCollectionGroups(
+            var ruleCollectionGroupTasks = firewallPolicies.Select(async p => new
+            {
+                p.Id,
+                RuleCollectionGroups = await azureResourceRetriever.RetrieveFirewallPolicyRuleCollectionGroups(
                     settings.Debug,
                     settings.Subscription.Value,
                     p.GetResourceGroupName(),
-                    p.Name));
+                    p.Name)
+            }).ToArray();
 
-            await Task.WhenAll(ruleCollectionGroupTasks.Values);
-
-            var ruleCollectionGroupsByPolicyId = ruleCollectionGroupTasks.ToDictionary(
-                kvp => kvp.Key,
-                kvp => (IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>)kvp.Value.Result);
+            var ruleCollectionGroupResults = await Task.WhenAll(ruleCollectionGroupTasks);
+            var ruleCollectionGroupsByPolicyId = new Dictionary<string, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var result in ruleCollectionGroupResults)
+            {
+                ruleCollectionGroupsByPolicyId[result.Id] = result.RuleCollectionGroups;
+            }
 
             ctx.Status = $"Retrieved {firewallPolicies.Count} firewall policies.";
 
