@@ -10,7 +10,7 @@ public static class AzCommand
     {
         var filename = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "cmd.exe" : "az";
         var arguments = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "/d /c az account show" : "account show";
-        
+
         var startInfo = new ProcessStartInfo
         {
             FileName = filename,

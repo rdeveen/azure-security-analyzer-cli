@@ -11,7 +11,8 @@ public class Settings : CommandSettings
 
     public override Scope GetScope
     {
-        get {
+        get
+        {
             if (Subscription != null && !string.IsNullOrWhiteSpace(ResourceGroup))
             {
                 return Scope.ResourceGroup(Subscription.Value, ResourceGroup);

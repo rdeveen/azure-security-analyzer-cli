@@ -59,7 +59,7 @@ public class Scope
 {
     public static Scope Subscription(Guid subscriptionId) => new("Subscription", "/subscriptions/" + subscriptionId, true);
     public static Scope ResourceGroup(Guid subscriptionId, string resourceGroup) => new("ResourceGroup", $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}", true);
-  
+
     private Scope(string name, string path, bool isSubscriptionBased)
     {
         Name = name;

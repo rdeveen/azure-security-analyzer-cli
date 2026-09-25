@@ -19,7 +19,7 @@ public static class CommandHelpers
         {
             return ValidationResult.Success();
         }
-        
+
         try
         {
             var resolved = Guid.Parse(AzCommand.GetDefaultAzureSubscriptionId());

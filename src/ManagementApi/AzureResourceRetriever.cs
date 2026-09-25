@@ -346,13 +346,13 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
     public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope)
     {
         var recommendations = new List<AdvisorRecommendation>();
-        
+
         var uri = new Uri(
             $"{scope.ScopePath}/providers/Microsoft.Security/assessments?api-version=2020-01-01&expand=metadata",
             UriKind.Relative);
 
         var result = await ExecuteTypedCallToManagementApi<SecurityAssessmentList>(includeDebugOutput, null, uri);
-        
+
         if (result?.Value is { Length: > 0 })
         {
             var filteredRecommendations = result.Value

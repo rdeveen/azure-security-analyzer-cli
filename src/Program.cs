@@ -22,8 +22,8 @@ registrations.AddHttpClient("ManagementApi", client =>
     client.BaseAddress = new Uri("https://management.azure.com/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 }).AddPolicyHandler(PollyExtensions.GetRetryAfterPolicy());
- 
-registrations.AddTransient<IAzureResourceRetriever, AzureResourceRetriever>(); 
+
+registrations.AddTransient<IAzureResourceRetriever, AzureResourceRetriever>();
 
 var registrar = new TypeRegistrar(registrations);
 

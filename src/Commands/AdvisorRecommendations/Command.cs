@@ -41,7 +41,7 @@ public class Command(IAzureResourceRetriever azureResourceRetriever) : AsyncComm
 
             // Write the output
             await outputFormatters[settings.Output]
-                .WriteAdvisorRecommendations(settings, [.. recommendations, .. defenderRecommendations]);            
+                .WriteAdvisorRecommendations(settings, [.. recommendations, .. defenderRecommendations]);
         });
 
         return 0;

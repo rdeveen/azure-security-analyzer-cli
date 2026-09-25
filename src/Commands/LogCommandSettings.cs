@@ -19,5 +19,4 @@ public class LogCommandSettings : Spectre.Console.Cli.CommandSettings
     [Description("Suppress all status/progress messages. Only actual data output is written. Useful for scripting.")]
     [DefaultValue(false)]
     public bool Quiet { get; set; }
-    
 }

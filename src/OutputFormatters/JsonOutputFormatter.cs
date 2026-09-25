@@ -42,7 +42,7 @@ public class JsonOutputFormatter : BaseOutputFormatter
         // The analysis results are included in the output for each network security group
         // Group the analysis results by network security group and include them in the output
         // Remove the nsg from the analysis results to avoid duplication
-        
+
         var output = networkSecurityGroups.Select(nsg =>
         {
             var nsgAnalysisResults = analysisResults.Where(r => r.NetworkSecurityGroup.Id == nsg.Id).ToList();

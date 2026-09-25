@@ -13,7 +13,7 @@ public class PollyExtensions
                 retryCount: 5,
                 sleepDurationProvider: (_, response, _) =>
                 {
-                    var retryAfterHeader = 
+                    var retryAfterHeader =
                         response.Result.Headers.FirstOrDefault(h => h.Key.Contains("retry-after", StringComparison.InvariantCultureIgnoreCase));
                     return retryAfterHeader.Key != null && int.TryParse(retryAfterHeader.Value.First(), out var seconds)
                         ? TimeSpan.FromSeconds(seconds)

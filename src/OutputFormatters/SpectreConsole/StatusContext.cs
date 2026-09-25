@@ -53,9 +53,9 @@ public class StatusContext
 
     internal StatusContext()
     {
-        
+
     }
-    
+
     internal StatusContext(ProgressContext context, ProgressTask task, SpinnerColumn spinnerColumn)
     {
         this.context = context ?? throw new ArgumentNullException(nameof(context));
