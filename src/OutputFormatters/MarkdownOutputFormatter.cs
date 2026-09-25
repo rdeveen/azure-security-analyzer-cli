@@ -21,6 +21,53 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteAzureFirewalls(Commands.AzureFirewalls.Settings settings, IReadOnlyCollection<FirewallPolicy> firewallPolicies, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyDictionary<string, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> ruleCollectionGroupsByPolicyId, IReadOnlyCollection<Commands.AzureFirewalls.AnomalyDetectionResult> analysisResults)
+    {
+        if (firewallPolicies.Count == 0)
+        {
+            Console.WriteLine("No firewall policies found.");
+
+            return Task.CompletedTask;
+        }
+
+        Console.WriteLine("# Azure Firewalls");
+        Console.WriteLine();
+        Console.WriteLine("|Policy|Resource Group|Attached Firewalls|IDPS Mode|Threat Intel|Rule Collections|");
+        Console.WriteLine("|---|---|---|---|---|---|");
+
+        foreach (var firewallPolicy in firewallPolicies.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
+        {
+            var attachedFirewalls = azureFirewalls
+                .Where(f => string.Equals(f.Properties.FirewallPolicy?.Id, firewallPolicy.Id, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(f => f.Name)
+                .Select(f => f.Name);
+
+            var attachedSummary = attachedFirewalls.Any()
+                ? string.Join("<br>", attachedFirewalls)
+                : "(none)";
+
+            var ruleCollectionGroups = ruleCollectionGroupsByPolicyId.GetValueOrDefault(firewallPolicy.Id) ?? [];
+            var ruleCollections = ruleCollectionGroups
+                .SelectMany(g => g.Properties.RuleCollections ?? [])
+                .OrderBy(c => c.Priority ?? int.MaxValue)
+                .Select(c => $"{c.Name} ({c.Action?.Type ?? c.RuleCollectionType}, {c.Rules?.Length ?? 0} rules)");
+
+            var ruleCollectionSummary = ruleCollections.Any()
+                ? string.Join("<br>", ruleCollections)
+                : "(none)";
+
+            var firewallPolicyAnalysisResults = analysisResults.Where(r => r.FirewallPolicy.Id == firewallPolicy.Id).ToList();
+            if (firewallPolicyAnalysisResults.Count > 0)
+            {
+                ruleCollectionSummary += $"<br><br>**{(firewallPolicyAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}**<br>{string.Join("<br>", firewallPolicyAnalysisResults.Select(r => $"- {r.IssueDescription} ({r.Severity})"))}";
+            }
+
+            Console.WriteLine($"|{firewallPolicy.Name}|{firewallPolicy.GetResourceGroupName()}|{attachedSummary}|{firewallPolicy.Properties.IntrusionDetection?.Mode ?? "Off"}|{firewallPolicy.Properties.ThreatIntelMode ?? "(not set)"}|{ruleCollectionSummary}|");
+        }
+
+        return Task.CompletedTask;
+    }
+
     public override Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups, IReadOnlyCollection<Commands.NetworkSecurityGroups.AnomalyDetectionResult> analysisResults)
     {
         if (networkSecurityGroups.Count == 0)

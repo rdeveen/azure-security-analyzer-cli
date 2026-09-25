@@ -72,6 +72,11 @@ app.Configure(config =>
     config.AddCommand<AzureSecurityAnalyzer.Commands.NetworkSecurityGroups.Command>("nsg")
        .WithDescription("Get the network security groups in the subscription.");
 
+    config.AddExample(["azure-firewalls"]);
+
+    config.AddCommand<AzureSecurityAnalyzer.Commands.AzureFirewalls.Command>("azure-firewalls")
+       .WithDescription("Get the Azure Firewall policies in the subscription.");
+
     config.AddCommand<AzureSecurityAnalyzer.Commands.RouteTables.Command>("route-tables")
        .WithDescription("Get the route tables in the subscription.");
 
