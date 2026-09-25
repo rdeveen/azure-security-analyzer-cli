@@ -8,7 +8,7 @@ public class ProgramTests
     [Fact]
     public async Task RunningWithoutArguments_ShowsHelpForAvailableCommands()
     {
-        var executablePath = Path.Combine(AppContext.BaseDirectory, "azure-security-analyzer-cli.dll");
+        var executablePath = typeof(AzureSecurityAnalyzer.Commands.CommandSettings).Assembly.Location;
         var startInfo = new ProcessStartInfo("dotnet", $"\"{executablePath}\"")
         {
             RedirectStandardOutput = true,
