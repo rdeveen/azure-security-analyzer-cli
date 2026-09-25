@@ -1,4 +1,4 @@
-# azure-security-analyzer-cli
+# Azure Security Analyzer CLI (`azure-security-analyzer-cli`)
 
 The Azure Security Analyzer CLI is a tool for analyzing the security posture of various Azure resources, including Network Security Groups (NSGs), Azure Firewall policies, route tables, and Azure Advisor recommendations. The CLI helps identify potential security issues and misconfigurations, providing actionable insights to improve the overall security of your Azure environment. It goes beyond the basic security checks by offering in-depth analysis and recommendations tailored to your specific Azure setup.
 
