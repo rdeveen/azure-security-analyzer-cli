@@ -111,9 +111,6 @@ jobs:
       - name: Restore
         run: dotnet restore
 
-      - name: Run Regions
-        run: dotnet run -- regions -o markdown --quiet ${{ runner.debug == '1' && '--no-color --debug' || '' }} >> $GITHUB_STEP_SUMMARY
-
       - name: Azure Login
         uses: azure/login@v3
         with:

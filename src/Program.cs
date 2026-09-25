@@ -8,14 +8,12 @@ using Spectre.Console;
 // using AzureSecurityAnalyzer.Commands.DailyCost;
 // using AzureSecurityAnalyzer.Commands.DetectAnomaly;
 // using AzureSecurityAnalyzer.Commands.Diff;
-// using AzureSecurityAnalyzer.Commands.Regions;
 // using AzureSecurityAnalyzer.Commands.Threshold;
 // using AzureSecurityAnalyzer.Commands.WhatIf;
 // using AzureSecurityAnalyzer.CostApi;
 // using AzureSecurityAnalyzer.Infrastructure.TypeConvertors;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
-using AzureSecurityAnalyzer.RegionsApi;
 using AzureSecurityAnalyzer.ManagementApi;
 using AzureSecurityAnalyzer.Commands;
 
@@ -38,34 +36,18 @@ registrations.AddHttpClient("ManagementApi", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 }).AddPolicyHandler(PollyExtensions.GetRetryAfterPolicy());
  
-registrations.AddHttpClient("RegionsApi", client =>
-{
-    client.BaseAddress = new Uri("https://datacenters.microsoft.com/");
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.DefaultRequestHeaders.Add("User-Agent", "azure-cost-cli");
-}).AddPolicyHandler(PollyPolicyExtensions.GetRetryAfterPolicy());
-
 registrations.AddTransient<IAzureResourceRetriever, AzureResourceRetriever>(); 
-registrations.AddTransient<IRegionsRetriever, AzureRegionsRetriever>();
 
 var registrar = new TypeRegistrar(registrations);
 
 // Setup the application itself
 var app = new CommandApp(registrar);
 
-// We default to the ShowCommand
-app.SetDefaultCommand<AzureSecurityAnalyzer.Commands.Regions.Command>();
-
 app.Configure(config =>
 {
     config.SetApplicationName("azure-security-analyzer");
     config.UseAssemblyInformationalVersion();
     //     config.SetInterceptor(new ConfigFileInterceptor());
-
-    config.AddExample(["regions"]);
-
-    config.AddCommand<AzureSecurityAnalyzer.Commands.Regions.Command>("regions")
-       .WithDescription("Get the available Azure regions.");
 
     config.AddExample(["nsg"]);
 
@@ -142,9 +124,6 @@ app.Configure(config =>
     //         add.SetDescription("Run what-if scenarios");
     //     });
 
-    //     config.AddCommand<RegionsCommand>("regions")
-    //       .WithDescription("Get the available Azure regions.");
-
     //     config.AddBranch("threshold", add =>
     //     {
     //         add.AddCommand<DailyChangeThresholdCommand>("daily-change")
@@ -162,4 +141,9 @@ app.Configure(config =>
 });
 
 // Run the application
+if (args.Length == 0)
+{
+    args = ["--help"];
+}
+
 return await app.RunAsync(args);

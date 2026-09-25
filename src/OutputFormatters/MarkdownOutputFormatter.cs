@@ -1,26 +1,9 @@
-using AzureSecurityAnalyzer.Commands.Regions;
 using AzureSecurityAnalyzer.ManagementApi;
-using AzureSecurityAnalyzer.RegionsApi;
 
 namespace AzureSecurityAnalyzer.OutputFormatters;
 
 public class MarkdownOutputFormatter : BaseOutputFormatter
 {
-    public override Task WriteRegions(Settings settings, IReadOnlyCollection<AzureRegion> regions)
-    {
-        Console.WriteLine("# Azure Regions");
-        Console.WriteLine();
-        Console.WriteLine("|Region|Geography|Display Name|Location|");
-        Console.WriteLine("|---|---|---|---|");
-
-        foreach (var region in regions.OrderBy(a => a.Continent).ThenBy(a => a.GeographyId))
-        {
-            Console.WriteLine($"|{region.Continent}|{region.GeographyId}|{region.DisplayName}|{region.Location}|");
-        }
-
-        return Task.CompletedTask;
-    }
-
     public override Task WriteAzureFirewalls(Commands.AzureFirewalls.Settings settings, IReadOnlyCollection<FirewallPolicy> firewallPolicies, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyDictionary<string, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> ruleCollectionGroupsByPolicyId, IReadOnlyCollection<Commands.AzureFirewalls.AnomalyDetectionResult> analysisResults)
     {
         if (firewallPolicies.Count == 0)
