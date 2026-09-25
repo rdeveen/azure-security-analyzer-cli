@@ -2,7 +2,6 @@
 using Spectre.Console;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
-using AzureSecurityAnalyzer.RegionsApi;
 using AzureSecurityAnalyzer.ManagementApi;
 
 // Apply --no-color early from CLI args, before any Spectre output is rendered.
@@ -24,33 +23,18 @@ registrations.AddHttpClient("ManagementApi", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 }).AddPolicyHandler(PollyExtensions.GetRetryAfterPolicy());
  
-registrations.AddHttpClient("RegionsApi", client =>
-{
-    client.BaseAddress = new Uri("https://datacenters.microsoft.com/");
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.DefaultRequestHeaders.Add("User-Agent", "azure-cost-cli");
-}).AddPolicyHandler(PollyPolicyExtensions.GetRetryAfterPolicy());
-
 registrations.AddTransient<IAzureResourceRetriever, AzureResourceRetriever>(); 
-registrations.AddTransient<IRegionsRetriever, AzureRegionsRetriever>();
 
 var registrar = new TypeRegistrar(registrations);
 
 // Setup the application itself
 var app = new CommandApp(registrar);
 
-// We default to the ShowCommand
 app.SetDefaultCommand<AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Command>();
-
 app.Configure(config =>
 {
     config.SetApplicationName("azure-security-analyzer");
     config.UseAssemblyInformationalVersion();
-
-    config.AddExample(["regions"]);
-
-    config.AddCommand<AzureSecurityAnalyzer.Commands.Regions.Command>("regions")
-       .WithDescription("Get the available Azure regions.");
 
     config.AddExample(["nsg", "--subscription", "<subscription-id>", "--output", "markdown"]);
 
@@ -90,7 +74,6 @@ app.Configure(config =>
         }
         return 1;
     });
-
     config.ValidateExamples();
 });
 

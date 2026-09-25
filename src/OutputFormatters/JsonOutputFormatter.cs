@@ -2,7 +2,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AzureSecurityAnalyzer.Commands;
 using AzureSecurityAnalyzer.ManagementApi;
-using AzureSecurityAnalyzer.RegionsApi;
 using Spectre.Console;
 using Spectre.Console.Json;
 
@@ -10,13 +9,6 @@ namespace AzureSecurityAnalyzer.OutputFormatters;
 
 public class JsonOutputFormatter : BaseOutputFormatter
 {
-    public override Task WriteRegions(Commands.Regions.Settings settings, IReadOnlyCollection<AzureRegion> regions)
-    {
-        WriteJson(settings, regions);
-
-        return Task.CompletedTask;
-    }
-
     public override Task WriteAzureFirewalls(Commands.AzureFirewalls.Settings settings, IReadOnlyCollection<FirewallPolicy> firewallPolicies, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyDictionary<string, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> ruleCollectionGroupsByPolicyId, IReadOnlyCollection<Commands.AzureFirewalls.AnomalyDetectionResult> analysisResults)
     {
         var output = firewallPolicies.Select(firewallPolicy =>

@@ -1,38 +1,11 @@
 using AzureSecurityAnalyzer.Commands.NetworkSecurityGroups;
 using AzureSecurityAnalyzer.ManagementApi;
-using AzureSecurityAnalyzer.RegionsApi;
 using Spectre.Console;
 
 namespace AzureSecurityAnalyzer.OutputFormatters;
 
 public class ConsoleOutputFormatter : BaseOutputFormatter
 {
-    public override Task WriteRegions(Commands.Regions.Settings settings, IReadOnlyCollection<AzureRegion> regions)
-    {
-        var table = new Table();
-        table.Border(TableBorder.Rounded);
-        table.AddColumn("Region");
-        table.AddColumn("Geography");
-        table.AddColumn("Display Name");
-        table.AddColumn("Sustainability");
-        table.AddColumn("Compliance");
-
-        foreach (var region in regions.OrderBy(a => a.Continent).ThenBy(a => a.GeographyId))
-        {
-            table.AddRow(
-                new Markup(region.Continent),
-                new Markup(region.GeographyId),
-                new Markup((region.IsOpen ? "[green]" : "[red]") + region.DisplayName + "[/]\n[dim](" + region.Id +
-                           ")[/]"),
-                new Markup(string.Join(", ", region.SustainabilityIds.OrderBy(a => a))),
-                new Markup(string.Join(", ", region.ComplianceIds.OrderBy(a => a))));
-        }
-
-        AnsiConsole.Write(table);
-
-        return Task.CompletedTask;
-    }
-
     public override Task WriteAzureFirewalls(Commands.AzureFirewalls.Settings settings, IReadOnlyCollection<FirewallPolicy> firewallPolicies, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyDictionary<string, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> ruleCollectionGroupsByPolicyId, IReadOnlyCollection<Commands.AzureFirewalls.AnomalyDetectionResult> analysisResults)
     {
         if (firewallPolicies.Count == 0)
