@@ -9,7 +9,7 @@ public class Analyzer
         new IntrusionDetectionDisabledRule(),
         new UnusedFirewallPolicyRule(),
         new MissingRuleCollectionsRule(),
-        new AllowAllRule()
+        new AllowAllRulesRule()
     ];
 
     public static Task<IReadOnlyCollection<AnomalyDetectionResult>> Analyze(
@@ -23,10 +23,10 @@ public class Analyzer
             var ruleCollectionGroups = ruleCollectionGroupsByPolicyId.GetValueOrDefault(firewallPolicy.Id) ?? [];
             foreach (var rule in Rules)
             {
-                var detection = rule.TryDetect(firewallPolicy, azureFirewalls, ruleCollectionGroups);
-                if (detection is not null)
+                var detections = rule.TryDetect(firewallPolicy, azureFirewalls, ruleCollectionGroups);
+                if (detections.Count > 0)
                 {
-                    results.Add(detection);
+                    results.AddRange(detections);
                 }
             }
         }
@@ -36,7 +36,7 @@ public class Analyzer
 
     private interface IFirewallPolicyAnomalyRule
     {
-        AnomalyDetectionResult? TryDetect(
+        IReadOnlyCollection<AnomalyDetectionResult> TryDetect(
             FirewallPolicy firewallPolicy,
             IReadOnlyCollection<AzureFirewall> azureFirewalls,
             IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> ruleCollectionGroups);
@@ -44,72 +44,78 @@ public class Analyzer
 
     private sealed class IntrusionDetectionDisabledRule : IFirewallPolicyAnomalyRule
     {
-        public AnomalyDetectionResult? TryDetect(FirewallPolicy firewallPolicy, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> ruleCollectionGroups)
+        public IReadOnlyCollection<AnomalyDetectionResult> TryDetect(FirewallPolicy firewallPolicy, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> ruleCollectionGroups)
         {
             if (string.Equals(firewallPolicy.Properties.IntrusionDetection?.Mode, "Off", StringComparison.OrdinalIgnoreCase)
                 || string.IsNullOrWhiteSpace(firewallPolicy.Properties.IntrusionDetection?.Mode))
             {
-                return new AnomalyDetectionResult(
+                return
+                [
+                    new AnomalyDetectionResult(
                     firewallPolicy,
                     "This Firewall Policy does not have intrusion detection configured in alert or deny mode.",
-                    SeverityLevel.High);
+                    SeverityLevel.High)
+                ];
             }
 
-            return null;
+            return [];
         }
     }
 
     private sealed class UnusedFirewallPolicyRule : IFirewallPolicyAnomalyRule
     {
-        public AnomalyDetectionResult? TryDetect(FirewallPolicy firewallPolicy, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> ruleCollectionGroups)
+        public IReadOnlyCollection<AnomalyDetectionResult> TryDetect(FirewallPolicy firewallPolicy, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> ruleCollectionGroups)
         {
             if (!azureFirewalls.Any(f => string.Equals(f.Properties.FirewallPolicy?.Id, firewallPolicy.Id, StringComparison.OrdinalIgnoreCase)))
             {
-                return new AnomalyDetectionResult(
+                return
+                [
+                    new AnomalyDetectionResult(
                     firewallPolicy,
                     "This Firewall Policy is not attached to any Azure Firewall.",
-                    SeverityLevel.Medium);
+                    SeverityLevel.Medium)
+                ];
             }
 
-            return null;
+            return [];
         }
     }
 
     private sealed class MissingRuleCollectionsRule : IFirewallPolicyAnomalyRule
     {
-        public AnomalyDetectionResult? TryDetect(FirewallPolicy firewallPolicy, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> ruleCollectionGroups)
+        public IReadOnlyCollection<AnomalyDetectionResult> TryDetect(FirewallPolicy firewallPolicy, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> ruleCollectionGroups)
         {
             if (!ruleCollectionGroups.Any(g => g.Properties.RuleCollections?.Any(c => c.Rules is { Length: > 0 }) == true))
             {
-                return new AnomalyDetectionResult(
+                return
+                [
+                    new AnomalyDetectionResult(
                     firewallPolicy,
                     "This Firewall Policy does not contain any rules.",
-                    SeverityLevel.High);
+                    SeverityLevel.High)
+                ];
             }
 
-            return null;
+            return [];
         }
     }
 
-    private sealed class AllowAllRule : IFirewallPolicyAnomalyRule
+    private sealed class AllowAllRulesRule : IFirewallPolicyAnomalyRule
     {
-        public AnomalyDetectionResult? TryDetect(FirewallPolicy firewallPolicy, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> ruleCollectionGroups)
+        public IReadOnlyCollection<AnomalyDetectionResult> TryDetect(FirewallPolicy firewallPolicy, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> ruleCollectionGroups)
         {
-            var matchingRule = FindAllowAllRule(ruleCollectionGroups);
-            if (matchingRule is null)
-            {
-                return null;
-            }
-
-            return new AnomalyDetectionResult(
-                firewallPolicy,
-                $"This Firewall Policy contains an allow-all rule '{matchingRule.Value.RuleName}' in rule collection '{matchingRule.Value.RuleCollectionName}'.",
-                SeverityLevel.High);
+            return FindAllowAllRules(ruleCollectionGroups)
+                .Select(r => new AnomalyDetectionResult(
+                    firewallPolicy,
+                    $"This Firewall Policy contains an allow-all rule '{r.RuleName}' in rule collection '{r.RuleCollectionName}'.",
+                    SeverityLevel.High))
+                .ToArray();
         }
     }
 
-    private static (string RuleCollectionName, string RuleName)? FindAllowAllRule(IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> ruleCollectionGroups)
+    private static IReadOnlyCollection<(string RuleCollectionName, string RuleName)> FindAllowAllRules(IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> ruleCollectionGroups)
     {
+        var matchingRules = new List<(string RuleCollectionName, string RuleName)>();
         foreach (var ruleCollectionGroup in ruleCollectionGroups)
         {
             var ruleCollections = ruleCollectionGroup.Properties.RuleCollections ?? [];
@@ -124,13 +130,13 @@ public class Analyzer
                 {
                     if (IsAllowAllRule(rule))
                     {
-                        return (ruleCollection.Name, rule.Name);
+                        matchingRules.Add((ruleCollection.Name, rule.Name));
                     }
                 }
             }
         }
 
-        return null;
+        return matchingRules;
     }
 
     private static bool IsAllowAllRule(FirewallPolicyRule rule) =>
@@ -146,8 +152,7 @@ public class Analyzer
         string.Equals(rule.RuleType, "ApplicationRule", StringComparison.OrdinalIgnoreCase)
         && ContainsValue(rule.SourceAddresses, "*")
         && (ContainsValue(rule.TargetFqdns, "*")
-            || ContainsValue(rule.TargetUrls, "*")
-            || ContainsValue(rule.DestinationAddresses, "*"));
+            || ContainsValue(rule.TargetUrls, "*"));
 
     private static bool ContainsValue(string[]? values, string expectedValue) =>
         values?.Any(v => string.Equals(v, expectedValue, StringComparison.OrdinalIgnoreCase)) ?? false;

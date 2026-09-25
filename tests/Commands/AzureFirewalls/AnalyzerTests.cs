@@ -81,6 +81,43 @@ public class AnalyzerTests
     }
 
     [Fact]
+    public async Task Analyze_WithMultipleAllowAllRules_ReturnsAnomalyForEachRule()
+    {
+        var firewallPolicy = CreateFirewallPolicy(intrusionDetectionMode: "Alert");
+        var azureFirewall = CreateAzureFirewall(firewallPolicy.Id);
+
+        var results = await Analyzer.Analyze([firewallPolicy], [azureFirewall], new Dictionary<string, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>>
+        {
+            [firewallPolicy.Id] =
+            [
+                CreateRuleCollectionGroup(
+                    ruleCollections:
+                    [
+                        CreateRuleCollection(
+                            name: "allow-collection",
+                            actionType: "Allow",
+                            rules:
+                            [
+                                CreateRule(
+                                    name: "allow-all-network",
+                                    ruleType: "NetworkRule",
+                                    sourceAddresses: ["*"],
+                                    destinationAddresses: ["*"],
+                                    destinationPorts: ["*"]),
+                                CreateRule(
+                                    name: "allow-all-app",
+                                    ruleType: "ApplicationRule",
+                                    sourceAddresses: ["*"],
+                                    targetFqdns: ["*"])
+                            ])
+                    ])
+            ]
+        });
+
+        results.Count(r => r.IssueDescription.Contains("allow-all rule", StringComparison.Ordinal)).Should().Be(2);
+    }
+
+    [Fact]
     public async Task Analyze_WithAttachedFirewallAndRulesInAlertMode_ReturnsNoAnomalies()
     {
         var firewallPolicy = CreateFirewallPolicy(intrusionDetectionMode: "Alert");
@@ -161,12 +198,13 @@ public class AnalyzerTests
         string ruleType = "NetworkRule",
         string[]? sourceAddresses = null,
         string[]? destinationAddresses = null,
-        string[]? destinationPorts = null) => new(
+        string[]? destinationPorts = null,
+        string[]? targetFqdns = null) => new(
         RuleType: ruleType,
         Name: name,
         SourceAddresses: sourceAddresses,
         DestinationAddresses: destinationAddresses,
         DestinationPorts: destinationPorts,
-        TargetFqdns: null,
+        TargetFqdns: targetFqdns,
         TargetUrls: null);
 }
