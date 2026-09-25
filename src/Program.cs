@@ -30,6 +30,7 @@ var registrar = new TypeRegistrar(registrations);
 // Setup the application itself
 var app = new CommandApp(registrar);
 
+app.SetDefaultCommand<AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Command>();
 app.Configure(config =>
 {
     config.SetApplicationName("azure-security-analyzer");
