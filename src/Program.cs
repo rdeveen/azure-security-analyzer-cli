@@ -1,21 +1,8 @@
-﻿using System.ComponentModel;
-using AzureSecurityAnalyzer.Infrastructure;
+﻿using AzureSecurityAnalyzer.Infrastructure;
 using Spectre.Console;
-// using AzureSecurityAnalyzer.Commands.AccumulatedCost;
-// using AzureSecurityAnalyzer.Commands.Budgets;
-// using AzureSecurityAnalyzer.Commands.CostByResource;
-// using AzureSecurityAnalyzer.Commands.CostByTag;
-// using AzureSecurityAnalyzer.Commands.DailyCost;
-// using AzureSecurityAnalyzer.Commands.DetectAnomaly;
-// using AzureSecurityAnalyzer.Commands.Diff;
-// using AzureSecurityAnalyzer.Commands.Threshold;
-// using AzureSecurityAnalyzer.Commands.WhatIf;
-// using AzureSecurityAnalyzer.CostApi;
-// using AzureSecurityAnalyzer.Infrastructure.TypeConvertors;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 using AzureSecurityAnalyzer.ManagementApi;
-using AzureSecurityAnalyzer.Commands;
 
 // Apply --no-color early from CLI args, before any Spectre output is rendered.
 // The ConfigFileInterceptor also applies NoColor after command settings are parsed,
@@ -47,9 +34,8 @@ app.Configure(config =>
 {
     config.SetApplicationName("azure-security-analyzer");
     config.UseAssemblyInformationalVersion();
-    //     config.SetInterceptor(new ConfigFileInterceptor());
 
-    config.AddExample(["nsg"]);
+    config.AddExample(["nsg", "--subscription", "<subscription-id>", "--output", "markdown"]);
 
     config.AddCommand<AzureSecurityAnalyzer.Commands.NetworkSecurityGroups.Command>("nsg")
        .WithDescription("Get the network security groups in the subscription.");
@@ -64,18 +50,10 @@ app.Configure(config =>
 
     config.AddExample(["route-tables"]);
 
-    config.AddExample(["advisor"]);
-
     config.AddCommand<AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Command>("advisor")
        .WithDescription("Get the Azure Advisor recommendations for the subscription.");
 
-    //         .WithDescription("Show the accumulated cost details.");
-    //     config.AddExample(new[] { "accumulatedCost", "-o", "json" });
-    //     config.AddExample(new[] { "costByResource", "-s", "00000000-0000-0000-0000-000000000000", "-o", "text" });
-    //     config.AddExample(new[] { "dailyCosts", "--dimension", "MeterCategory" });
-    //     config.AddExample(new[] { "budgets", "-s", "00000000-0000-0000-0000-000000000000" });
-    //     config.AddExample(new[] { "detectAnomalies", "--dimension", "ResourceId", "--recent-activity-days", "4" });
-    //     config.AddExample(new[] { "costByTag", "--tag", "cost-center" });
+    config.AddExample(["advisor"]);
 
     // Without an exception handler, Spectre.Console.Cli writes the exception to stdout
     // and returns -1, which the shell reports as exit code 255. Write to stderr instead,
@@ -95,48 +73,6 @@ app.Configure(config =>
         }
         return 1;
     });
-
-    //     config.AddCommand<AccumulatedCostCommand>("accumulatedCost")
-    //         .WithDescription("Show the accumulated cost details.");
-
-    //     config.AddCommand<DailyCostCommand>("dailyCosts")
-    //       .WithDescription("Show the daily cost by a given dimension.");
-
-    //     config.AddCommand<CostByResourceCommand>("costByResource")
-    //       .WithDescription("Show the cost details by resource.");
-
-    //     config.AddCommand<CostByTagCommand>("costByTag")
-    //       .WithDescription("Show the cost details by the provided tag key(s).");
-
-    //     config.AddCommand<DetectAnomalyCommand>("detectAnomalies")
-    //       .WithDescription("Detect anomalies and trends.");
-
-    //     config.AddCommand<DiffCommand>("diff")
-    //       .WithDescription("Show the cost difference between two timeframes.");
-
-    //     config.AddCommand<BudgetsCommand>("budgets")
-    //       .WithDescription("Get the available budgets.");
-
-    //     config.AddBranch<WhatIfSettings>("what-if", add =>
-    //     {
-    //         add.AddCommand<DevTestWhatIfCommand>("devtest").WithDescription("Run what-if scenarios to check price differences if the resources were on a DevTest subscription. Only applies to VMs.");
-    //         add.AddCommand<RegionWhatIfCommand>("region").WithDescription("Run what-if scenarios to check price differences if the resources would have run in a different region. Only applies to VMs.");
-    //         add.SetDescription("Run what-if scenarios");
-    //     });
-
-    //     config.AddBranch("threshold", add =>
-    //     {
-    //         add.AddCommand<DailyChangeThresholdCommand>("daily-change")
-    //         .WithDescription("Trigger if today's cost change vs yesterday exceeds the threshold.");
-    //         add.AddCommand<ForecastDeviationThresholdCommand>("forecast-deviation")
-    //         .WithDescription("Trigger if actual spend deviates from forecast by more than the threshold.");
-    //         add.AddCommand<ServiceSpikeThresholdCommand>("service-spike")
-    //         .WithDescription("Trigger if any single service cost spikes beyond the threshold vs the previous period.");
-    //         add.AddCommand<WeeklyAverageThresholdCommand>("weekly-average")
-    //         .WithDescription("Trigger if the 7-day average daily cost exceeds the threshold.");
-    //         add.SetDescription("Cost threshold checks for CI/CD gating.");
-    //     });
-
     config.ValidateExamples();
 });
 
