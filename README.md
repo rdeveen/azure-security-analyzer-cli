@@ -1,8 +1,14 @@
 # azure-security-analyzer-cli
 
-Azure Security Analyzer CLI
+The Azure Security Analyzer CLI is a tool for analyzing the security posture of various Azure resources, including Network Security Groups (NSGs), Azure Firewall policies, route tables, and Azure Advisor recommendations. The CLI helps identify potential security issues and misconfigurations, providing actionable insights to improve the overall security of your Azure environment. It goes beyond the basic security checks by offering in-depth analysis and recommendations tailored to your specific Azure setup.
 
 ## Installation
+
+You can install this tool globally, using the dotnet tool command:
+
+```bash
+dotnet tool install -g azure-security-analyzer-cli
+```
 
 ### Prerequisites
 
@@ -12,6 +18,8 @@ Azure Security Analyzer CLI
 ## Authentication
 
 To make the call to the Azure Management API, you do need to run this from a user account with permissions to access the resources of the subscription. Further more, it needs to find the active credentials and it does so by using the ChainedTokenCredential provider which will look for the az cli token first. Make sure to run `az login` (with optionally the --tenant parameter) to make sure you have an active session.
+
+## Usage
 
 ## Commands
 
@@ -52,3 +60,13 @@ az-security-analyzer advisor
 # Run the security-analyzer with route table analysis
 az-security-analyzer route-tables
 ```
+
+## Upgrading
+
+When there is a new version available on NuGet, you can use the dotnet tool update command to upgrade:
+
+```bash
+dotnet tool update --global azure-security-analyzer-cli
+```
+
+With a --version parameter, you can specify a specific version to install. Use the --no-cache parameter to force a re-download of the package if it cannot find the latest version.
