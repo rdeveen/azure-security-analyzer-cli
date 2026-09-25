@@ -231,6 +231,6 @@ public class CommandTests
     private static CommandContext CreateCommandContext()
     {
         var remainingArguments = Mock.Of<IRemainingArguments>();
-        return new CommandContext([], remainingArguments, "azure-firewalls", null);
+        return new CommandContext([], remainingArguments, "firewall", null);
     }
 }

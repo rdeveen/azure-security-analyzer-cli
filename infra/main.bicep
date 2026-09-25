@@ -413,7 +413,7 @@ resource firewallPolicyIdpsOffNoRules 'Microsoft.Network/firewallPolicies@2024-0
   location: location
   properties: {
     sku: {
-      tier: 'Standard'
+      tier: 'Premium'
     }
     threatIntelMode: 'Alert'
     intrusionDetection: {
@@ -428,7 +428,7 @@ resource firewallPolicyAllowAll 'Microsoft.Network/firewallPolicies@2024-05-01' 
   location: location
   properties: {
     sku: {
-      tier: 'Standard'
+      tier: 'Premium'
     }
     threatIntelMode: 'Alert'
     intrusionDetection: {
@@ -479,7 +479,7 @@ resource firewallPolicyScopedRule 'Microsoft.Network/firewallPolicies@2024-05-01
   location: location
   properties: {
     sku: {
-      tier: 'Standard'
+      tier: 'Premium'
     }
     threatIntelMode: 'Deny'
     intrusionDetection: {

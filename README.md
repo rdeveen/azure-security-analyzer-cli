@@ -21,7 +21,7 @@ To make the call to the Azure Management API, you do need to run this from a use
 | ------------------------------ | --------------------------------------------------------------------------------- |
 | `az-security-analyzer regions` | List all Azure regions and their availability.          |
 | `az-security-analyzer nsg`     | Analyze Network Security Groups (NSGs) for security issues and misconfigurations. |
-| `az-security-analyzer azure-firewalls` | Analyze Azure Firewall policies for attachment, rule, and IDPS issues. |
+| `az-security-analyzer firewall` | Analyze Azure Firewall policies for attachment, rule, and IDPS issues. |
 | `az-security-analyzer route-tables` | Analyze route tables for default-route and attachment issues. |
 | `az-security-analyzer advisor` | Analyze Azure Advisor recommendations for security-related issues.                |
 | `az-security-analyzer --help`  | Show help information for the Azure Security Analyzer CLI.                        |
@@ -47,7 +47,7 @@ az-security-analyzer regions --no-color --quiet
 az-security-analyzer nsg
 
 # Run the security-analyzer with Azure Firewall policy analysis
-az-security-analyzer azure-firewalls
+az-security-analyzer firewall
 
 # Run the security-analyzer with Advisor recommendations
 az-security-analyzer advisor
