@@ -406,3 +406,120 @@ resource nicNsgAllowAll 'Microsoft.Network/networkInterfaces@2025-07-01' = {
     }
   }
 }
+
+@description('This Firewall Policy is intentionally unattached, has intrusion detection disabled, and has no rule collection groups.')
+resource firewallPolicyIdpsOffNoRules 'Microsoft.Network/firewallPolicies@2024-05-01' = {
+  name: 'fp-idps-off-no-rules'
+  location: location
+  properties: {
+    sku: {
+      tier: 'Standard'
+    }
+    threatIntelMode: 'Alert'
+    intrusionDetection: {
+      mode: 'Off'
+    }
+  }
+}
+
+@description('This Firewall Policy is intentionally unattached and contains an allow-all network rule for analyzer validation without deploying an Azure Firewall.')
+resource firewallPolicyAllowAll 'Microsoft.Network/firewallPolicies@2024-05-01' = {
+  name: 'fp-alert-allow-all'
+  location: location
+  properties: {
+    sku: {
+      tier: 'Standard'
+    }
+    threatIntelMode: 'Alert'
+    intrusionDetection: {
+      mode: 'Alert'
+    }
+  }
+}
+
+resource firewallPolicyAllowAllRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2024-05-01' = {
+  name: 'DefaultNetworkRuleCollectionGroup'
+  parent: firewallPolicyAllowAll
+  properties: {
+    priority: 200
+    ruleCollections: [
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'allow-all-collection'
+        priority: 100
+        action: {
+          type: 'Allow'
+        }
+        rules: [
+          {
+            ruleType: 'NetworkRule'
+            name: 'allow-all-network'
+            ipProtocols: [
+              'Any'
+            ]
+            sourceAddresses: [
+              '*'
+            ]
+            destinationAddresses: [
+              '*'
+            ]
+            destinationPorts: [
+              '*'
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+
+@description('This Firewall Policy is intentionally unattached and contains a scoped HTTPS rule so policy analysis can distinguish it from allow-all configurations.')
+resource firewallPolicyScopedRule 'Microsoft.Network/firewallPolicies@2024-05-01' = {
+  name: 'fp-deny-scoped-rule'
+  location: location
+  properties: {
+    sku: {
+      tier: 'Standard'
+    }
+    threatIntelMode: 'Deny'
+    intrusionDetection: {
+      mode: 'Deny'
+    }
+  }
+}
+
+resource firewallPolicyScopedRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2024-05-01' = {
+  name: 'DefaultNetworkRuleCollectionGroup'
+  parent: firewallPolicyScopedRule
+  properties: {
+    priority: 200
+    ruleCollections: [
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'allow-https-only'
+        priority: 100
+        action: {
+          type: 'Allow'
+        }
+        rules: [
+          {
+            ruleType: 'NetworkRule'
+            name: 'allow-https-outbound'
+            ipProtocols: [
+              'TCP'
+            ]
+            sourceAddresses: [
+              '10.0.0.0/16'
+            ]
+            destinationAddresses: [
+              '*'
+            ]
+            destinationPorts: [
+              '443'
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
