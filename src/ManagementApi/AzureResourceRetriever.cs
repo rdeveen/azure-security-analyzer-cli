@@ -16,14 +16,12 @@ public interface IAzureResourceRetriever
     string ManagementApiAddress { get; set; }
     TimeSpan HttpTimeout { get; set; }
 
-    Task<Subscription> RetrieveSubscription(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<AzureFirewall>> RetrieveAzureFirewalls(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<FirewallPolicy>> RetrieveFirewallPolicies(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> RetrieveFirewallPolicyRuleCollectionGroups(bool includeDebugOutput, Guid subscriptionId, string resourceGroupName, string firewallPolicyName);
     Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<RouteTable>> RetrieveRouteTables(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
-
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudSecurityPolicies(bool includeDebugOutput, Guid subscriptionId);
 }
@@ -35,25 +33,6 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
     public required string ManagementApiAddress { get; set; }
     public TimeSpan HttpTimeout { get; set; } = TimeSpan.FromSeconds(100); // same as the .net core default
     private readonly JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true };
-
-    public async Task<Subscription> RetrieveSubscription(bool includeDebugOutput, Guid subscriptionId)
-    {
-        var uri = new Uri(
-            $"/subscriptions/{subscriptionId}/?api-version=2019-11-01",
-            UriKind.Relative);
-
-        var content = await ExecuteTypedCallToManagementApi<Subscription>(includeDebugOutput, null, uri);
-
-        if (includeDebugOutput)
-        {
-            var json = JsonSerializer.Serialize(content, jsonSerializerOptions);
-            AnsiConsole.WriteLine("Retrieved subscription details:");
-            AnsiConsole.Write(new JsonText(json));
-            AnsiConsole.WriteLine();
-        }
-
-        return content;
-    }
 
     public async Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId)
     {

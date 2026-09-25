@@ -40,7 +40,7 @@ var registrar = new TypeRegistrar(registrations);
 var app = new CommandApp(registrar);
 
 // We default to the ShowCommand
-app.SetDefaultCommand<AzureSecurityAnalyzer.Commands.Regions.Command>();
+app.SetDefaultCommand<AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Command>();
 
 app.Configure(config =>
 {
@@ -52,7 +52,7 @@ app.Configure(config =>
     config.AddCommand<AzureSecurityAnalyzer.Commands.Regions.Command>("regions")
        .WithDescription("Get the available Azure regions.");
 
-    config.AddExample(["nsg"]);
+    config.AddExample(["nsg", "--subscription", "<subscription-id>", "--output", "markdown"]);
 
     config.AddCommand<AzureSecurityAnalyzer.Commands.NetworkSecurityGroups.Command>("nsg")
        .WithDescription("Get the network security groups in the subscription.");
@@ -67,10 +67,10 @@ app.Configure(config =>
 
     config.AddExample(["route-tables"]);
 
-    config.AddExample(["advisor"]);
-
     config.AddCommand<AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Command>("advisor")
        .WithDescription("Get the Azure Advisor recommendations for the subscription.");
+
+    config.AddExample(["advisor"]);
 
     // Without an exception handler, Spectre.Console.Cli writes the exception to stdout
     // and returns -1, which the shell reports as exit code 255. Write to stderr instead,
