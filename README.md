@@ -40,9 +40,6 @@ These flags are available on every command:
 **Examples:**
 
 ```bash
-# Run the regions command with no color and quiet mode
-az-security-analyzer regions --no-color --quiet
-
 # Run the security-analyzer with NSG analysis
 az-security-analyzer nsg
 
