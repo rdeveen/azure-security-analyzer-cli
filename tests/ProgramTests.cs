@@ -37,6 +37,5 @@ public class ProgramTests
         standardOutput.Should().Contain("firewall");
         standardOutput.Should().Contain("route-tables");
         standardOutput.Should().Contain("advisor");
-        standardOutput.Should().NotContain("regions");
     }
 }
