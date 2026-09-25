@@ -129,3 +129,6 @@ jobs:
 
       - name: Run Route Tables Integration Test
         run: dotnet run -- route-tables -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet ${{ runner.debug == '1' && '--no-color --debug' || '' }} >> $GITHUB_STEP_SUMMARY
+
+      - name: Run Firewall Integration Test
+        run: dotnet run -- firewall -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet ${{ runner.debug == '1' && '--no-color --debug' || '' }} >> $GITHUB_STEP_SUMMARY
