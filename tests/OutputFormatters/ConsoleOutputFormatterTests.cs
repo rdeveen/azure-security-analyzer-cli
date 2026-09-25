@@ -37,6 +37,28 @@ public class ConsoleOutputFormatterTests
     }
 
     [Fact]
+    public async Task WriteNetworkSecurityGroups_WithAnalysisResults_WritesAnomalyTable()
+    {
+        // Arrange
+        var networkSecurityGroup = MarkdownOutputFormatterTests.CreateNetworkSecurityGroup();
+        var analysisResult = new AzureSecurityAnalyzer.Commands.NetworkSecurityGroups.AnomalyDetectionResult(
+            networkSecurityGroup,
+            "Test anomaly",
+            AzureSecurityAnalyzer.Commands.NetworkSecurityGroups.SeverityLevel.High);
+
+        // Act
+        var output = await CaptureAnsiConsoleOutput(() => formatter.WriteNetworkSecurityGroups(
+            new AzureSecurityAnalyzer.Commands.NetworkSecurityGroups.Settings(),
+            [networkSecurityGroup],
+            [analysisResult]));
+
+        // Assert
+        output.Should().Contain("Anomaly Detected");
+        output.Should().Contain("Test anomaly");
+        output.Should().Contain("High");
+    }
+
+    [Fact]
     public async Task WriteAdvisorRecommendations_WithEmptyCollection_WritesMessageWithoutHeaders()
     {
         // Act

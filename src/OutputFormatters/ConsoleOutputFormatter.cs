@@ -81,32 +81,33 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
                 new Markup(attachedSummary),
                 new Markup(ruleSummary));
 
-                var nsgAnalysisResults = analysisResults
-                    .Where(r => r.NetworkSecurityGroup.Id == nsg.Id)
-                    .ToList();
+            var nsgAnalysisResults = analysisResults
+                .Where(r => r.NetworkSecurityGroup.Id == nsg.Id)
+                .ToList();
 
-  if (nsgAnalysisResults.Count > 0)
+            if (nsgAnalysisResults.Count > 0)
+            {
+                var anomalyTable = new Table();
+                anomalyTable.Border(TableBorder.Rounded);
+                anomalyTable.AddColumn($"[red]{(nsgAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}[/]");
+                anomalyTable.AddColumn($"Issue Description [dim]({nsgAnalysisResults.Count} issue{(nsgAnalysisResults.Count != 1 ? "s" : "")})[/]");
+
+                foreach (var result in nsgAnalysisResults)
                 {
-                    var anomalyTable = new Table();
-                    anomalyTable.Border(TableBorder.Rounded);
-                    anomalyTable.AddColumn($"[red]{(nsgAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}[/]");
-                    anomalyTable.AddColumn($"Issue Description [dim]({nsgAnalysisResults.Count} issue{(nsgAnalysisResults.Count != 1 ? "s" : "")})[/]");
-
-                    foreach (var result in nsgAnalysisResults)
-                    {
-                        anomalyTable.AddRow(
-                            new Markup(result.Severity switch
-                            {
-                                SeverityLevel.High => "[red]High[/]",
-                                SeverityLevel.Medium => "[orange1]Medium[/]",
-                                SeverityLevel.Low => "[yellow]Low[/]",
-                                _ => "[dim]Unknown[/]"
-                            }),
-                            new Markup(result.IssueDescription)
-                        );
-                    }
-                    table.AddRow(new Markup(""), new Markup(""), new Markup(""), new Markup(""), anomalyTable);
+                    anomalyTable.AddRow(
+                        new Markup(result.Severity switch
+                        {
+                            SeverityLevel.High => "[red]High[/]",
+                            SeverityLevel.Medium => "[orange1]Medium[/]",
+                            SeverityLevel.Low => "[yellow]Low[/]",
+                            _ => "[dim]Unknown[/]"
+                        }),
+                        new Markup(result.IssueDescription)
+                    );
                 }
+
+                table.AddRow(new Markup(""), new Markup(""), new Markup(""), anomalyTable);
+            }
         }
 
         AnsiConsole.Write(table);
