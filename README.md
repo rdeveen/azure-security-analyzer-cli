@@ -12,7 +12,7 @@ dotnet tool install -g azure-security-analyzer-cli
 
 ### Prerequisites
 
-- .NET 10.0 runtime
+- .NET 11.0 runtime
 - Azure CLI authenticated (`az login`) or an Azure identity with minimal the Reader role
 
 ## Authentication
