@@ -32,6 +32,22 @@ public static class FormatterExtensions
         }
     }
 
+    extension(FirewallPolicy firewallPolicy)
+    {
+        public string GetResourceGroupName()
+        {
+            return GetSegmentValue(firewallPolicy.Id, "resourceGroups");
+        }
+    }
+
+    extension(AzureFirewall azureFirewall)
+    {
+        public string GetResourceGroupName()
+        {
+            return GetSegmentValue(azureFirewall.Id, "resourceGroups");
+        }
+    }
+
     extension(RouteTable routeTable)
     {
         public string GetResourceGroupName()
