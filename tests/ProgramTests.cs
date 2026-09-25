@@ -6,10 +6,12 @@ namespace AzureSecurityAnalyzer.Tests;
 public class ProgramTests
 {
     [Fact]
-    public async Task RunningWithoutArguments_ShowsHelpForAvailableCommands()
+    public async Task RunningHelp_ShowsHelpForAvailableCommands()
     {
-        var executablePath = typeof(AzureSecurityAnalyzer.Commands.CommandSettings).Assembly.Location;
-        var startInfo = new ProcessStartInfo("dotnet", $"\"{executablePath}\"")
+        var projectPath = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "src", "azure-security-analyzer-cli.csproj"));
+
+        var startInfo = new ProcessStartInfo("dotnet", $"run --project \"{projectPath}\" -- --help")
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
