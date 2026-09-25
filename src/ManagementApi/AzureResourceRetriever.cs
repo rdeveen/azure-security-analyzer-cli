@@ -22,7 +22,6 @@ public interface IAzureResourceRetriever
     Task<IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> RetrieveFirewallPolicyRuleCollectionGroups(bool includeDebugOutput, Guid subscriptionId, string resourceGroupName, string firewallPolicyName);
     Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<RouteTable>> RetrieveRouteTables(bool includeDebugOutput, Guid subscriptionId);
-    Task<IReadOnlyCollection<FirewallPolicy>> RetrieveFirewallPolicies(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
 
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
@@ -238,79 +237,6 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         }
 
         return routeTables;
-    }
-
-    public async Task<IReadOnlyCollection<FirewallPolicy>> RetrieveFirewallPolicies(bool includeDebugOutput, Guid subscriptionId)
-    {
-        var firewallPolicies = new List<FirewallPolicy>();
-
-        var uri = new Uri(
-            $"/subscriptions/{subscriptionId}/providers/Microsoft.Network/firewallPolicies?api-version=2024-05-01",
-            UriKind.Relative);
-
-        while (true)
-        {
-            var content = await ExecuteTypedCallToManagementApi<FirewallPolicyListResult>(includeDebugOutput, null, uri);
-
-            if (content?.Value is { Length: > 0 })
-            {
-                firewallPolicies.AddRange(content.Value);
-            }
-
-            // Follow the nextLink for paged results
-            if (string.IsNullOrEmpty(content?.NextLink))
-            {
-                break;
-            }
-
-            uri = new Uri(content.NextLink, UriKind.Absolute);
-        }
-
-        // Hydrate each policy with its rule collection groups
-        var hydratedPolicies = new List<FirewallPolicy>(firewallPolicies.Count);
-        foreach (var policy in firewallPolicies)
-        {
-            var groups = await RetrieveFirewallPolicyRuleCollectionGroups(includeDebugOutput, policy.Id);
-            hydratedPolicies.Add(policy with { RuleCollectionGroups = groups });
-        }
-
-        if (includeDebugOutput)
-        {
-            var json = JsonSerializer.Serialize(hydratedPolicies, jsonSerializerOptions);
-            AnsiConsole.WriteLine($"Retrieved {hydratedPolicies.Count} firewall policies:");
-            AnsiConsole.Write(new JsonText(json));
-            AnsiConsole.WriteLine();
-        }
-
-        return hydratedPolicies;
-    }
-
-    private async Task<FirewallPolicyRuleCollectionGroup[]> RetrieveFirewallPolicyRuleCollectionGroups(bool includeDebugOutput, string policyId)
-    {
-        var groups = new List<FirewallPolicyRuleCollectionGroup>();
-
-        var uri = new Uri(
-            $"{policyId}/ruleCollectionGroups?api-version=2024-05-01",
-            UriKind.Relative);
-
-        while (true)
-        {
-            var content = await ExecuteTypedCallToManagementApi<FirewallPolicyRuleCollectionGroupListResult>(includeDebugOutput, null, uri);
-
-            if (content?.Value is { Length: > 0 })
-            {
-                groups.AddRange(content.Value);
-            }
-
-            if (string.IsNullOrEmpty(content?.NextLink))
-            {
-                break;
-            }
-
-            uri = new Uri(content.NextLink, UriKind.Absolute);
-        }
-
-        return groups.ToArray();
     }
 
     public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope)
@@ -747,76 +673,4 @@ public record RouteProperties(
     string? AddressPrefix,
     string NextHopType,
     string? NextHopIpAddress
-);
-
-public record FirewallPolicyListResult(
-    FirewallPolicy[] Value,
-    string? NextLink
-);
-
-public record FirewallPolicy(
-    string Id,
-    string Name,
-    string Type,
-    string Location,
-    Dictionary<string, string>? Tags,
-    FirewallPolicySku? Sku,
-    FirewallPolicyProperties Properties,
-    FirewallPolicyRuleCollectionGroup[]? RuleCollectionGroups = null
-);
-
-public record FirewallPolicySku(
-    string? Tier
-);
-
-public record FirewallPolicyProperties(
-    string? ProvisioningState,
-    ResourceReference[]? Firewalls,
-    ResourceReference[]? RuleCollectionGroups,
-    FirewallPolicyIntrusionDetection? IntrusionDetection
-);
-
-public record FirewallPolicyIntrusionDetection(
-    string? Mode
-);
-
-public record FirewallPolicyRuleCollectionGroupListResult(
-    FirewallPolicyRuleCollectionGroup[] Value,
-    string? NextLink
-);
-
-public record FirewallPolicyRuleCollectionGroup(
-    string Id,
-    string Name,
-    string? Type,
-    FirewallPolicyRuleCollectionGroupProperties Properties
-);
-
-public record FirewallPolicyRuleCollectionGroupProperties(
-    int? Priority,
-    FirewallPolicyRuleCollection[]? RuleCollections
-);
-
-public record FirewallPolicyRuleCollection(
-    string RuleCollectionType,
-    string Name,
-    int? Priority,
-    FirewallPolicyRuleCollectionAction? Action,
-    FirewallPolicyRule[]? Rules
-);
-
-public record FirewallPolicyRuleCollectionAction(
-    string? Type
-);
-
-public record FirewallPolicyRule(
-    string RuleType,
-    string Name,
-    string[]? SourceAddresses,
-    string[]? DestinationAddresses,
-    string[]? DestinationPorts,
-    string[]? DestinationFqdns,
-    string[]? TargetFqdns,
-    string[]? TargetUrls,
-    string[]? Protocols
 );

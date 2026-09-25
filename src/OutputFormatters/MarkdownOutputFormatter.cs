@@ -158,48 +158,6 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
-    public override Task WriteFirewallPolicies(Commands.Firewall.Settings settings, IReadOnlyCollection<FirewallPolicy> firewallPolicies, IReadOnlyCollection<Commands.Firewall.AnomalyDetectionResult> analysisResults)
-    {
-        if (firewallPolicies.Count == 0)
-        {
-            Console.WriteLine("No firewall policies found.");
-
-            return Task.CompletedTask;
-        }
-
-        Console.WriteLine("# Firewall Policies");
-        Console.WriteLine();
-        Console.WriteLine("|Name|Resource Group|SKU|Attached Firewalls|Rule Collection Groups|");
-        Console.WriteLine("|---|---|---|---|---|");
-
-        foreach (var policy in firewallPolicies.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
-        {
-            var firewalls = policy.GetAttachedFirewallNames();
-            var firewallSummary = firewalls.Length == 0 ? "(none)" : string.Join("<br>", firewalls);
-
-            var groups = policy.RuleCollectionGroups ?? [];
-            var groupSummary = groups.Length == 0
-                ? "(none)"
-                : string.Join("<br>", groups
-                    .OrderBy(g => g.Properties.Priority)
-                    .Select(g =>
-                    {
-                        var ruleCount = (g.Properties.RuleCollections ?? []).Sum(rc => (rc.Rules ?? []).Length);
-                        return $"{g.Name} ({ruleCount} rule{(ruleCount != 1 ? "s" : "")})";
-                    }));
-
-            var policyAnalysisResults = analysisResults.Where(r => r.FirewallPolicy.Id == policy.Id).ToList();
-            if (policyAnalysisResults.Count > 0)
-            {
-                groupSummary += $"<br><br>**{(policyAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}**<br>{string.Join("<br>", policyAnalysisResults.Select(r => $"- {r.IssueDescription} ({r.Severity})"))}";
-            }
-
-            Console.WriteLine($"|{policy.Name}|{policy.GetResourceGroupName()}|{policy.Sku?.Tier ?? "(none)"}|{firewallSummary}|{groupSummary}|");
-        }
-
-        return Task.CompletedTask;
-    }
-
     public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
     {
         if (recommendations.Count == 0)

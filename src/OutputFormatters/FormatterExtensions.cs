@@ -62,20 +62,6 @@ public static class FormatterExtensions
         }
     }
 
-    extension(FirewallPolicy firewallPolicy)
-    {
-        public string GetResourceGroupName()
-        {
-            return GetSegmentValue(firewallPolicy.Id, "resourceGroups");
-        }
-
-        public string[] GetAttachedFirewallNames()
-        {
-            var firewalls = firewallPolicy.Properties.Firewalls ?? [];
-            return GetNames(firewalls, "azureFirewalls", "Firewall").ToArray();
-        }
-    }
-
     extension(AdvisorRecommendation recommendation)
     {
         public int GetImpactOrder()

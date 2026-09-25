@@ -82,11 +82,6 @@ app.Configure(config =>
 
     config.AddExample(["route-tables"]);
 
-    config.AddCommand<AzureSecurityAnalyzer.Commands.Firewall.Command>("firewall")
-       .WithDescription("Analyze Azure Firewall Policies for security issues and misconfigurations.");
-
-    config.AddExample(["firewall"]);
-
     config.AddExample(["advisor"]);
 
     config.AddCommand<AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Command>("advisor")
