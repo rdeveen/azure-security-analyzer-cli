@@ -17,6 +17,9 @@ public interface IAzureResourceRetriever
     TimeSpan HttpTimeout { get; set; }
 
     Task<Subscription> RetrieveSubscription(bool includeDebugOutput, Guid subscriptionId);
+    Task<IReadOnlyCollection<AzureFirewall>> RetrieveAzureFirewalls(bool includeDebugOutput, Guid subscriptionId);
+    Task<IReadOnlyCollection<FirewallPolicy>> RetrieveFirewallPolicies(bool includeDebugOutput, Guid subscriptionId);
+    Task<IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> RetrieveFirewallPolicyRuleCollectionGroups(bool includeDebugOutput, Guid subscriptionId, string resourceGroupName, string firewallPolicyName);
     Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<RouteTable>> RetrieveRouteTables(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
@@ -87,6 +90,116 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         }
 
         return networkSecurityGroups;
+    }
+
+    public async Task<IReadOnlyCollection<AzureFirewall>> RetrieveAzureFirewalls(bool includeDebugOutput, Guid subscriptionId)
+    {
+        var azureFirewalls = new List<AzureFirewall>();
+
+        var uri = new Uri(
+            $"/subscriptions/{subscriptionId}/providers/Microsoft.Network/azureFirewalls?api-version=2024-10-01",
+            UriKind.Relative);
+
+        while (true)
+        {
+            var content = await ExecuteTypedCallToManagementApi<AzureFirewallListResult>(includeDebugOutput, null, uri);
+
+            if (content?.Value is { Length: > 0 })
+            {
+                azureFirewalls.AddRange(content.Value);
+            }
+
+            if (string.IsNullOrEmpty(content?.NextLink))
+            {
+                break;
+            }
+
+            uri = new Uri(content.NextLink, UriKind.Absolute);
+        }
+
+        if (includeDebugOutput)
+        {
+            var json = JsonSerializer.Serialize(azureFirewalls, jsonSerializerOptions);
+            AnsiConsole.WriteLine($"Retrieved {azureFirewalls.Count} Azure firewalls:");
+            AnsiConsole.Write(new JsonText(json));
+            AnsiConsole.WriteLine();
+        }
+
+        return azureFirewalls;
+    }
+
+    public async Task<IReadOnlyCollection<FirewallPolicy>> RetrieveFirewallPolicies(bool includeDebugOutput, Guid subscriptionId)
+    {
+        var firewallPolicies = new List<FirewallPolicy>();
+
+        var uri = new Uri(
+            $"/subscriptions/{subscriptionId}/providers/Microsoft.Network/firewallPolicies?api-version=2024-10-01",
+            UriKind.Relative);
+
+        while (true)
+        {
+            var content = await ExecuteTypedCallToManagementApi<FirewallPolicyListResult>(includeDebugOutput, null, uri);
+
+            if (content?.Value is { Length: > 0 })
+            {
+                firewallPolicies.AddRange(content.Value);
+            }
+
+            if (string.IsNullOrEmpty(content?.NextLink))
+            {
+                break;
+            }
+
+            uri = new Uri(content.NextLink, UriKind.Absolute);
+        }
+
+        if (includeDebugOutput)
+        {
+            var json = JsonSerializer.Serialize(firewallPolicies, jsonSerializerOptions);
+            AnsiConsole.WriteLine($"Retrieved {firewallPolicies.Count} firewall policies:");
+            AnsiConsole.Write(new JsonText(json));
+            AnsiConsole.WriteLine();
+        }
+
+        return firewallPolicies;
+    }
+
+    public async Task<IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> RetrieveFirewallPolicyRuleCollectionGroups(bool includeDebugOutput, Guid subscriptionId, string resourceGroupName, string firewallPolicyName)
+    {
+        var ruleCollectionGroups = new List<FirewallPolicyRuleCollectionGroup>();
+        var escapedResourceGroupName = Uri.EscapeDataString(resourceGroupName);
+        var escapedFirewallPolicyName = Uri.EscapeDataString(firewallPolicyName);
+
+        var uri = new Uri(
+            $"/subscriptions/{subscriptionId}/resourceGroups/{escapedResourceGroupName}/providers/Microsoft.Network/firewallPolicies/{escapedFirewallPolicyName}/ruleCollectionGroups?api-version=2024-10-01",
+            UriKind.Relative);
+
+        while (true)
+        {
+            var content = await ExecuteTypedCallToManagementApi<FirewallPolicyRuleCollectionGroupListResult>(includeDebugOutput, null, uri);
+
+            if (content?.Value is { Length: > 0 })
+            {
+                ruleCollectionGroups.AddRange(content.Value);
+            }
+
+            if (string.IsNullOrEmpty(content?.NextLink))
+            {
+                break;
+            }
+
+            uri = new Uri(content.NextLink, UriKind.Absolute);
+        }
+
+        if (includeDebugOutput)
+        {
+            var json = JsonSerializer.Serialize(ruleCollectionGroups, jsonSerializerOptions);
+            AnsiConsole.WriteLine($"Retrieved {ruleCollectionGroups.Count} firewall policy rule collection groups for policy '{firewallPolicyName}':");
+            AnsiConsole.Write(new JsonText(json));
+            AnsiConsole.WriteLine();
+        }
+
+        return ruleCollectionGroups;
     }
 
     public async Task<IReadOnlyCollection<RouteTable>> RetrieveRouteTables(bool includeDebugOutput, Guid subscriptionId)
@@ -434,6 +547,97 @@ public record SecurityAssessmentMetadataProperties(
 public record AzureResourceDetails(
     string Id,
     string Source
+);
+
+public record AzureFirewallListResult(
+    AzureFirewall[] Value,
+    string? NextLink
+);
+
+public record AzureFirewall(
+    string Id,
+    string Name,
+    string Type,
+    string Location,
+    Dictionary<string, string>? Tags,
+    AzureFirewallProperties Properties
+);
+
+public record AzureFirewallProperties(
+    string? ProvisioningState,
+    string? ThreatIntelMode,
+    ResourceReference? FirewallPolicy,
+    AzureFirewallSku? Sku
+);
+
+public record AzureFirewallSku(
+    string? Name,
+    string? Tier
+);
+
+public record FirewallPolicyListResult(
+    FirewallPolicy[] Value,
+    string? NextLink
+);
+
+public record FirewallPolicy(
+    string Id,
+    string Name,
+    string Type,
+    string Location,
+    Dictionary<string, string>? Tags,
+    FirewallPolicyProperties Properties
+);
+
+public record FirewallPolicyProperties(
+    string? ThreatIntelMode,
+    FirewallPolicyIntrusionDetection? IntrusionDetection
+);
+
+public record FirewallPolicyIntrusionDetection(
+    string? Mode
+);
+
+public record FirewallPolicyRuleCollectionGroupListResult(
+    FirewallPolicyRuleCollectionGroup[] Value,
+    string? NextLink
+);
+
+public record FirewallPolicyRuleCollectionGroup(
+    string Id,
+    string Name,
+    string? Type,
+    FirewallPolicyRuleCollectionGroupProperties Properties
+);
+
+public record FirewallPolicyRuleCollectionGroupProperties(
+    int? Priority,
+    FirewallPolicyRuleCollection[]? RuleCollections,
+    string? ProvisioningState
+);
+
+public record FirewallPolicyRuleCollection(
+    string RuleCollectionType,
+    string Name,
+    int? Priority,
+    FirewallPolicyRuleCollectionAction? Action,
+    FirewallPolicyRule[]? Rules
+);
+
+public record FirewallPolicyRuleCollectionAction(
+    string? Type
+);
+
+public record FirewallPolicyRule(
+    string RuleType,
+    string Name,
+    string[]? SourceAddresses,
+    string[]? SourceIpGroups,
+    string[]? DestinationAddresses,
+    string[]? DestinationIpGroups,
+    string[]? DestinationPorts,
+    string[]? TargetFqdns,
+    string[]? TargetUrls
 );
 
 public record RouteTableListResult(

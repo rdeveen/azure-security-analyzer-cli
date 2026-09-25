@@ -33,6 +33,88 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteAzureFirewalls(Commands.AzureFirewalls.Settings settings, IReadOnlyCollection<FirewallPolicy> firewallPolicies, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyDictionary<string, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> ruleCollectionGroupsByPolicyId, IReadOnlyCollection<Commands.AzureFirewalls.AnomalyDetectionResult> analysisResults)
+    {
+        if (firewallPolicies.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[yellow]No firewall policies found.[/]");
+
+            return Task.CompletedTask;
+        }
+
+        var table = new Table();
+        table.Border(TableBorder.Rounded);
+        table.AddColumn("Policy");
+        table.AddColumn("Resource Group");
+        table.AddColumn("Attached Firewalls");
+        table.AddColumn("IDPS Mode");
+        table.AddColumn("Threat Intel");
+        table.AddColumn("Rule Collections");
+
+        foreach (var firewallPolicy in firewallPolicies.OrderBy(a => a.GetResourceGroupName()).ThenBy(a => a.Name))
+        {
+            var attachedFirewalls = azureFirewalls
+                .Where(f => string.Equals(f.Properties.FirewallPolicy?.Id, firewallPolicy.Id, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(f => f.Name)
+                .Select(f => Markup.Escape(f.Name))
+                .ToArray();
+
+            var attachedSummary = attachedFirewalls.Length == 0
+                ? "[dim](none)[/]"
+                : string.Join("\n", attachedFirewalls);
+
+            var ruleCollectionGroups = ruleCollectionGroupsByPolicyId.GetValueOrDefault(firewallPolicy.Id) ?? [];
+            var ruleCollections = ruleCollectionGroups
+                .SelectMany(g => g.Properties.RuleCollections ?? [])
+                .OrderBy(c => c.Priority ?? int.MaxValue)
+                .Select(c => $"[dim]{Markup.Escape(c.Name)}[/] ({Markup.Escape(c.Action?.Type ?? c.RuleCollectionType)}, {c.Rules?.Length ?? 0} rules)")
+                .ToArray();
+
+            var ruleCollectionSummary = ruleCollections.Length == 0
+                ? "[dim](none)[/]"
+                : string.Join("\n", ruleCollections);
+
+            table.AddRow(
+                new Markup(Markup.Escape(firewallPolicy.Name)),
+                new Markup(Markup.Escape(firewallPolicy.GetResourceGroupName())),
+                new Markup(attachedSummary),
+                new Markup(firewallPolicy.Properties.IntrusionDetection?.Mode is { Length: > 0 } mode ? Markup.Escape(mode) : "[red]Off[/]"),
+                new Markup(firewallPolicy.Properties.ThreatIntelMode is { Length: > 0 } threatIntelMode ? Markup.Escape(threatIntelMode) : "[dim](not set)[/]"),
+                new Markup(ruleCollectionSummary));
+
+            var firewallPolicyAnalysisResults = analysisResults
+                .Where(r => r.FirewallPolicy.Id == firewallPolicy.Id)
+                .ToList();
+
+            if (firewallPolicyAnalysisResults.Count > 0)
+            {
+                var anomalyTable = new Table();
+                anomalyTable.Border(TableBorder.Rounded);
+                anomalyTable.AddColumn($"[red]{(firewallPolicyAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}[/]");
+                anomalyTable.AddColumn($"Issue Description [dim]({firewallPolicyAnalysisResults.Count} issue{(firewallPolicyAnalysisResults.Count != 1 ? "s" : "")})[/]");
+
+                foreach (var result in firewallPolicyAnalysisResults)
+                {
+                    anomalyTable.AddRow(
+                        new Markup(result.Severity switch
+                        {
+                            Commands.AzureFirewalls.SeverityLevel.High => "[red]High[/]",
+                            Commands.AzureFirewalls.SeverityLevel.Medium => "[orange1]Medium[/]",
+                            Commands.AzureFirewalls.SeverityLevel.Low => "[yellow]Low[/]",
+                            _ => "[dim]Unknown[/]"
+                        }),
+                        new Markup(Markup.Escape(result.IssueDescription)));
+                }
+
+                table.AddRow(new Markup(""), new Markup(""), new Markup(""), new Markup(""), new Markup(""), anomalyTable);
+            }
+        }
+
+        AnsiConsole.Write(table);
+
+        return Task.CompletedTask;
+    }
+
     public override Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups, IReadOnlyCollection<Commands.NetworkSecurityGroups.AnomalyDetectionResult> analysisResults)
     {
         if (networkSecurityGroups.Count == 0)

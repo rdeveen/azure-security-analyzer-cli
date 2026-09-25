@@ -17,6 +17,33 @@ public class JsonOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteAzureFirewalls(Commands.AzureFirewalls.Settings settings, IReadOnlyCollection<FirewallPolicy> firewallPolicies, IReadOnlyCollection<AzureFirewall> azureFirewalls, IReadOnlyDictionary<string, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> ruleCollectionGroupsByPolicyId, IReadOnlyCollection<Commands.AzureFirewalls.AnomalyDetectionResult> analysisResults)
+    {
+        var output = firewallPolicies.Select(firewallPolicy =>
+        {
+            var attachedFirewalls = azureFirewalls
+                .Where(f => string.Equals(f.Properties.FirewallPolicy?.Id, firewallPolicy.Id, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            var firewallPolicyAnalysisResults = analysisResults.Where(r => r.FirewallPolicy.Id == firewallPolicy.Id).ToList();
+
+            return new
+            {
+                FirewallPolicy = firewallPolicy,
+                AttachedFirewalls = attachedFirewalls,
+                RuleCollectionGroups = ruleCollectionGroupsByPolicyId.GetValueOrDefault(firewallPolicy.Id) ?? [],
+                Anomalies = firewallPolicyAnalysisResults.Select(r => new
+                {
+                    r.IssueDescription,
+                    r.Severity
+                }).ToList()
+            };
+        }).ToList();
+
+        WriteJson(settings, output);
+
+        return Task.CompletedTask;
+    }
+
     public override Task WriteNetworkSecurityGroups(Commands.NetworkSecurityGroups.Settings settings, IReadOnlyCollection<NetworkSecurityGroup> networkSecurityGroups, IReadOnlyCollection<Commands.NetworkSecurityGroups.AnomalyDetectionResult> analysisResults)
     {
         // Write the network security groups and their analysis results as JSON
