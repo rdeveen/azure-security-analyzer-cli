@@ -77,4 +77,4 @@ app.Configure(config =>
 });
 
 // Run the application
-return await app.RunAsync(args.Length == 0 ? ["--help"] : args);
+return await app.RunAsync(args);
