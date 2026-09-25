@@ -706,7 +706,9 @@ public record FirewallPolicyRule(
     string RuleType,
     string Name,
     string[]? SourceAddresses,
+    string[]? SourceIpGroups,
     string[]? DestinationAddresses,
+    string[]? DestinationIpGroups,
     string[]? DestinationPorts,
     string[]? TargetFqdns,
     string[]? TargetUrls

@@ -144,15 +144,21 @@ public class Analyzer
 
     private static bool IsAllowAllNetworkRule(FirewallPolicyRule rule) =>
         string.Equals(rule.RuleType, "NetworkRule", StringComparison.OrdinalIgnoreCase)
-        && ContainsValue(rule.SourceAddresses, "*")
-        && ContainsValue(rule.DestinationAddresses, "*")
+        && HasAnySource(rule)
+        && HasAnyDestination(rule)
         && ContainsValue(rule.DestinationPorts, "*");
 
     private static bool IsAllowAllApplicationRule(FirewallPolicyRule rule) =>
         string.Equals(rule.RuleType, "ApplicationRule", StringComparison.OrdinalIgnoreCase)
-        && ContainsValue(rule.SourceAddresses, "*")
+        && HasAnySource(rule)
         && (ContainsValue(rule.TargetFqdns, "*")
             || ContainsValue(rule.TargetUrls, "*"));
+
+    private static bool HasAnySource(FirewallPolicyRule rule) =>
+        ContainsValue(rule.SourceAddresses, "*") || ContainsValue(rule.SourceIpGroups, "*");
+
+    private static bool HasAnyDestination(FirewallPolicyRule rule) =>
+        ContainsValue(rule.DestinationAddresses, "*") || ContainsValue(rule.DestinationIpGroups, "*");
 
     private static bool ContainsValue(string[]? values, string expectedValue) =>
         values?.Any(v => string.Equals(v, expectedValue, StringComparison.OrdinalIgnoreCase)) ?? false;
