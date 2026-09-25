@@ -56,7 +56,7 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
             var attachedFirewalls = azureFirewalls
                 .Where(f => string.Equals(f.Properties.FirewallPolicy?.Id, firewallPolicy.Id, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(f => f.Name)
-                .Select(f => f.Name)
+                .Select(f => Markup.Escape(f.Name))
                 .ToArray();
 
             var attachedSummary = attachedFirewalls.Length == 0
@@ -67,7 +67,7 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
             var ruleCollections = ruleCollectionGroups
                 .SelectMany(g => g.Properties.RuleCollections ?? [])
                 .OrderBy(c => c.Priority ?? int.MaxValue)
-                .Select(c => $"[dim]{c.Name}[/] ({c.Action?.Type ?? c.RuleCollectionType}, {c.Rules?.Length ?? 0} rules)")
+                .Select(c => $"[dim]{Markup.Escape(c.Name)}[/] ({Markup.Escape(c.Action?.Type ?? c.RuleCollectionType)}, {c.Rules?.Length ?? 0} rules)")
                 .ToArray();
 
             var ruleCollectionSummary = ruleCollections.Length == 0
@@ -75,11 +75,11 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
                 : string.Join("\n", ruleCollections);
 
             table.AddRow(
-                new Markup(firewallPolicy.Name),
-                new Markup(firewallPolicy.GetResourceGroupName()),
+                new Markup(Markup.Escape(firewallPolicy.Name)),
+                new Markup(Markup.Escape(firewallPolicy.GetResourceGroupName())),
                 new Markup(attachedSummary),
-                new Markup(firewallPolicy.Properties.IntrusionDetection?.Mode ?? "[red]Off[/]"),
-                new Markup(firewallPolicy.Properties.ThreatIntelMode ?? "[dim](not set)[/]"),
+                new Markup(firewallPolicy.Properties.IntrusionDetection?.Mode is { Length: > 0 } mode ? Markup.Escape(mode) : "[red]Off[/]"),
+                new Markup(firewallPolicy.Properties.ThreatIntelMode is { Length: > 0 } threatIntelMode ? Markup.Escape(threatIntelMode) : "[dim](not set)[/]"),
                 new Markup(ruleCollectionSummary));
 
             var firewallPolicyAnalysisResults = analysisResults
@@ -103,7 +103,7 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
                             Commands.AzureFirewalls.SeverityLevel.Low => "[yellow]Low[/]",
                             _ => "[dim]Unknown[/]"
                         }),
-                        new Markup(result.IssueDescription));
+                        new Markup(Markup.Escape(result.IssueDescription)));
                 }
 
                 table.AddRow(new Markup(""), new Markup(""), new Markup(""), new Markup(""), new Markup(""), anomalyTable);

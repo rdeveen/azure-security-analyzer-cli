@@ -40,7 +40,7 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
             var attachedFirewalls = azureFirewalls
                 .Where(f => string.Equals(f.Properties.FirewallPolicy?.Id, firewallPolicy.Id, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(f => f.Name)
-                .Select(f => f.Name);
+                .Select(f => EscapeMarkdownCell(f.Name));
 
             var attachedSummary = attachedFirewalls.Any()
                 ? string.Join("<br>", attachedFirewalls)
@@ -50,7 +50,7 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
             var ruleCollections = ruleCollectionGroups
                 .SelectMany(g => g.Properties.RuleCollections ?? [])
                 .OrderBy(c => c.Priority ?? int.MaxValue)
-                .Select(c => $"{c.Name} ({c.Action?.Type ?? c.RuleCollectionType}, {c.Rules?.Length ?? 0} rules)");
+                .Select(c => $"{EscapeMarkdownCell(c.Name)} ({EscapeMarkdownCell(c.Action?.Type ?? c.RuleCollectionType)}, {c.Rules?.Length ?? 0} rules)");
 
             var ruleCollectionSummary = ruleCollections.Any()
                 ? string.Join("<br>", ruleCollections)
@@ -59,10 +59,10 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
             var firewallPolicyAnalysisResults = analysisResults.Where(r => r.FirewallPolicy.Id == firewallPolicy.Id).ToList();
             if (firewallPolicyAnalysisResults.Count > 0)
             {
-                ruleCollectionSummary += $"<br><br>**{(firewallPolicyAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}**<br>{string.Join("<br>", firewallPolicyAnalysisResults.Select(r => $"- {r.IssueDescription} ({r.Severity})"))}";
+                ruleCollectionSummary += $"<br><br>**{(firewallPolicyAnalysisResults.Count == 1 ? "Anomaly Detected" : "Anomalies Detected")}**<br>{string.Join("<br>", firewallPolicyAnalysisResults.Select(r => $"- {EscapeMarkdownCell(r.IssueDescription)} ({r.Severity})"))}";
             }
 
-            Console.WriteLine($"|{firewallPolicy.Name}|{firewallPolicy.GetResourceGroupName()}|{attachedSummary}|{firewallPolicy.Properties.IntrusionDetection?.Mode ?? "Off"}|{firewallPolicy.Properties.ThreatIntelMode ?? "(not set)"}|{ruleCollectionSummary}|");
+            Console.WriteLine($"|{EscapeMarkdownCell(firewallPolicy.Name)}|{EscapeMarkdownCell(firewallPolicy.GetResourceGroupName())}|{attachedSummary}|{EscapeMarkdownCell(firewallPolicy.Properties.IntrusionDetection?.Mode ?? "Off")}|{EscapeMarkdownCell(firewallPolicy.Properties.ThreatIntelMode ?? "(not set)")}|{ruleCollectionSummary}|");
         }
 
         return Task.CompletedTask;
@@ -228,5 +228,13 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
         }
 
         return Task.CompletedTask;
+    }
+
+    private static string EscapeMarkdownCell(string? value)
+    {
+        return (value ?? string.Empty)
+            .Replace("|", "\\|", StringComparison.Ordinal)
+            .Replace("\r", string.Empty, StringComparison.Ordinal)
+            .Replace("\n", "<br>", StringComparison.Ordinal);
     }
 }
