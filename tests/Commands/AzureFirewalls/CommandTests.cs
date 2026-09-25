@@ -84,12 +84,49 @@ public class CommandTests
         result.Should().Be(0);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_WithSensitiveResourceNames_EscapesConsoleAndMarkdownOutput()
+    {
+        var subscriptionId = Guid.NewGuid();
+        var firewallPolicy = CreateFirewallPolicy(name: "policy[1]|pipe");
+
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveAzureFirewalls(It.IsAny<bool>(), subscriptionId))
+            .ReturnsAsync([CreateAzureFirewall(firewallPolicy.Id, name: "fw[1]|pipe")]);
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveFirewallPolicies(It.IsAny<bool>(), subscriptionId))
+            .ReturnsAsync([firewallPolicy]);
+        mockAzureResourceRetriever
+            .Setup(r => r.RetrieveFirewallPolicyRuleCollectionGroups(It.IsAny<bool>(), subscriptionId, "rg1", firewallPolicy.Name))
+            .ReturnsAsync(CreateRuleCollectionGroups(ruleCollectionName: "collection[1]|pipe"));
+
+        var consoleOutput = await CaptureAnsiConsoleOutputText(() => ExecuteAsync(new Settings
+        {
+            Quiet = true,
+            Subscription = subscriptionId,
+            Output = OutputFormat.Console
+        }));
+
+        consoleOutput.Should().Contain("fw[1]|pipe");
+
+        var markdownOutput = await CaptureAnsiConsoleOutputText(() => ExecuteAsync(new Settings
+        {
+            Quiet = true,
+            Subscription = subscriptionId,
+            Output = OutputFormat.Markdown
+        }));
+
+        markdownOutput.Should().Contain("policy[1]\\|pipe");
+        markdownOutput.Should().Contain("collection[1]\\|pipe");
+    }
+
     private Task<int> ExecuteAsync(Settings settings) =>
         ((ICommand<Settings>)command).ExecuteAsync(CreateCommandContext(), settings, CancellationToken.None);
 
     private static async Task<T> CaptureAnsiConsoleOutput<T>(Func<Task<T>> action)
     {
         var originalConsole = AnsiConsole.Console;
+        var originalWriter = Console.Out;
         using var writer = new StringWriter();
         AnsiConsole.Console = AnsiConsole.Create(new AnsiConsoleSettings
         {
@@ -98,6 +135,7 @@ public class CommandTests
             Interactive = InteractionSupport.No,
             Out = new AnsiConsoleOutput(writer)
         });
+        Console.SetOut(writer);
 
         try
         {
@@ -106,6 +144,33 @@ public class CommandTests
         finally
         {
             AnsiConsole.Console = originalConsole;
+            Console.SetOut(originalWriter);
+        }
+    }
+
+    private static async Task<string> CaptureAnsiConsoleOutputText(Func<Task<int>> action)
+    {
+        var originalConsole = AnsiConsole.Console;
+        var originalWriter = Console.Out;
+        using var writer = new StringWriter();
+        AnsiConsole.Console = AnsiConsole.Create(new AnsiConsoleSettings
+        {
+            Ansi = AnsiSupport.No,
+            ColorSystem = ColorSystemSupport.NoColors,
+            Interactive = InteractionSupport.No,
+            Out = new AnsiConsoleOutput(writer)
+        });
+        Console.SetOut(writer);
+
+        try
+        {
+            await action();
+            return writer.ToString();
+        }
+        finally
+        {
+            AnsiConsole.Console = originalConsole;
+            Console.SetOut(originalWriter);
         }
     }
 
@@ -131,7 +196,7 @@ public class CommandTests
             FirewallPolicy: new ResourceReference(firewallPolicyId),
             Sku: new AzureFirewallSku("AZFW_VNet", "Premium")));
 
-    private static IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> CreateRuleCollectionGroups() =>
+    private static IReadOnlyCollection<FirewallPolicyRuleCollectionGroup> CreateRuleCollectionGroups(string ruleCollectionName = "collection1") =>
     [
         new FirewallPolicyRuleCollectionGroup(
             Id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg1/providers/Microsoft.Network/firewallPolicies/policy1/ruleCollectionGroups/group1",
@@ -143,7 +208,7 @@ public class CommandTests
                 [
                     new FirewallPolicyRuleCollection(
                         RuleCollectionType: "FirewallPolicyFilterRuleCollection",
-                        Name: "collection1",
+                        Name: ruleCollectionName,
                         Priority: 100,
                         Action: new FirewallPolicyRuleCollectionAction("Allow"),
                         Rules:
@@ -152,7 +217,9 @@ public class CommandTests
                                 RuleType: "NetworkRule",
                                 Name: "rule1",
                                 SourceAddresses: ["10.0.0.0/24"],
+                                SourceIpGroups: null,
                                 DestinationAddresses: ["10.0.1.0/24"],
+                                DestinationIpGroups: null,
                                 DestinationPorts: ["443"],
                                 TargetFqdns: null,
                                 TargetUrls: null)

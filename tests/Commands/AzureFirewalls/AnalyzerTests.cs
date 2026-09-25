@@ -118,6 +118,38 @@ public class AnalyzerTests
     }
 
     [Fact]
+    public async Task Analyze_WithAllowAllRuleUsingIpGroups_ReturnsAllowAllAnomaly()
+    {
+        var firewallPolicy = CreateFirewallPolicy(intrusionDetectionMode: "Alert");
+        var azureFirewall = CreateAzureFirewall(firewallPolicy.Id);
+
+        var results = await Analyzer.Analyze([firewallPolicy], [azureFirewall], new Dictionary<string, IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>>
+        {
+            [firewallPolicy.Id] =
+            [
+                CreateRuleCollectionGroup(
+                    ruleCollections:
+                    [
+                        CreateRuleCollection(
+                            name: "allow-ipgroups",
+                            actionType: "Allow",
+                            rules:
+                            [
+                                CreateRule(
+                                    name: "allow-all-ipgroups",
+                                    ruleType: "NetworkRule",
+                                    sourceIpGroups: ["*"],
+                                    destinationIpGroups: ["*"],
+                                    destinationPorts: ["*"])
+                            ])
+                    ])
+            ]
+        });
+
+        results.Should().ContainSingle(r => r.IssueDescription == "This Firewall Policy contains an allow-all rule 'allow-all-ipgroups' in rule collection 'allow-ipgroups'.");
+    }
+
+    [Fact]
     public async Task Analyze_WithAttachedFirewallAndRulesInAlertMode_ReturnsNoAnomalies()
     {
         var firewallPolicy = CreateFirewallPolicy(intrusionDetectionMode: "Alert");
@@ -197,13 +229,17 @@ public class AnalyzerTests
         string name = "rule1",
         string ruleType = "NetworkRule",
         string[]? sourceAddresses = null,
+        string[]? sourceIpGroups = null,
         string[]? destinationAddresses = null,
+        string[]? destinationIpGroups = null,
         string[]? destinationPorts = null,
         string[]? targetFqdns = null) => new(
         RuleType: ruleType,
         Name: name,
         SourceAddresses: sourceAddresses,
+        SourceIpGroups: sourceIpGroups,
         DestinationAddresses: destinationAddresses,
+        DestinationIpGroups: destinationIpGroups,
         DestinationPorts: destinationPorts,
         TargetFqdns: targetFqdns,
         TargetUrls: null);
