@@ -1,0 +1,28 @@
+{
+  "name": "azure-security-analyzer-cli",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    // Keep in sync with dotnet-version / dotnet-quality in .github/workflows/build.yml
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "11.0-preview"
+    },
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "installBicep": true
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "containerEnv": {
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "true",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "true"
+  },
+  "postCreateCommand": "dotnet restore src && dotnet restore tests",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "ms-azuretools.vscode-bicep",
+        "github.vscode-github-actions"
+      ]
+    }
+  }
+}

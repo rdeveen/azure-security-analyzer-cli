@@ -70,3 +70,9 @@ dotnet tool update --global azure-security-analyzer-cli
 ```
 
 With a --version parameter, you can specify a specific version to install. Use the --no-cache parameter to force a re-download of the package if it cannot find the latest version.
+
+## Development
+
+### Dev container
+
+The repository includes a [dev container](.devcontainer/devcontainer.json) with the .NET 11 preview SDK, Azure CLI (with Bicep) and GitHub CLI. Open the repository in VS Code with the Dev Containers extension (or in GitHub Codespaces) and dependencies are restored automatically. Run `az login` inside the container before using the tool against Azure.
