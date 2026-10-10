@@ -12,7 +12,7 @@ dotnet tool install -g azure-security-analyzer-cli
 
 ### Prerequisites
 
-- .NET 11.0 runtime
+- .NET 10.0 or .NET 11.0 runtime
 - Azure CLI authenticated (`az login`) or an Azure identity with minimal the Reader role
 
 ## Authentication
@@ -75,4 +75,4 @@ With a --version parameter, you can specify a specific version to install. Use t
 
 ### Dev container
 
-The repository includes a [dev container](.devcontainer/devcontainer.json) with the .NET 11 preview SDK, Azure CLI (with Bicep) and GitHub CLI. Open the repository in VS Code with the Dev Containers extension (or in GitHub Codespaces) and dependencies are restored automatically. Run `az login` inside the container before using the tool against Azure.
+The repository includes a [dev container](.devcontainer/devcontainer.json) with the .NET 11 preview SDK, Azure CLI (with Bicep) and GitHub CLI. The project targets both .NET 10 and .NET 11. Open the repository in VS Code with the Dev Containers extension (or in GitHub Codespaces) and dependencies are restored automatically. Run `az login` inside the container before using the tool against Azure.

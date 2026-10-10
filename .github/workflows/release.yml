@@ -45,11 +45,21 @@ jobs:
 
     - name: Publish Windows executable
       run: |
-        dotnet publish --configuration Release --runtime win-x64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true /p:PublishTrimmed=true /p:TrimMode=partial --output publish/win-x64
+        for framework in net10.0 net11.0; do
+          dotnet publish --framework "$framework" --configuration Release --runtime win-x64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true /p:PublishTrimmed=true /p:TrimMode=partial --output "publish/$framework/win-x64"
+          for executable in "publish/$framework/win-x64/"*.exe; do
+            mv "$executable" "${executable%.exe}-$framework.exe"
+          done
+        done
 
     - name: Publish Windows ARM64 executable
       run: |
-        dotnet publish --configuration Release --runtime win-arm64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true /p:PublishTrimmed=true /p:TrimMode=partial --output publish/win-arm64
+        for framework in net10.0 net11.0; do
+          dotnet publish --framework "$framework" --configuration Release --runtime win-arm64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true /p:PublishTrimmed=true /p:TrimMode=partial --output "publish/$framework/win-arm64"
+          for executable in "publish/$framework/win-arm64/"*.exe; do
+            mv "$executable" "${executable%.exe}-$framework.exe"
+          done
+        done
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
@@ -57,8 +67,7 @@ jobs:
         name: packages
         path: |
           src/nupkgs/*.nupkg
-          src/publish/win-x64/*.exe
-          src/publish/win-arm64/*.exe
+          src/publish/**/*.exe
  
     - name: NuGet login (OIDC → temp API key)
       uses: NuGet/login@v1
@@ -76,6 +85,5 @@ jobs:
       with:
         files: |
           src/nupkgs/*.nupkg
-          src/publish/win-x64/*.exe
-          src/publish/win-arm64/*.exe
+          src/publish/**/*.exe
         generate_release_notes: true

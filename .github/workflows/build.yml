@@ -49,11 +49,11 @@ jobs:
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build --framework net11.0 --configuration Release --no-restore
 
       - name: Test
         working-directory: ./tests
-        run: dotnet test --verbosity normal --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx" --logger "console;verbosity=detailed" --results-directory ./coverage
+        run: dotnet test --framework net11.0 --verbosity normal --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx" --logger "console;verbosity=detailed" --results-directory ./coverage
   
       - name: Generate coverage report
         working-directory: ./tests
@@ -93,12 +93,38 @@ jobs:
           show_missing: true
           link_missing_lines: true
           only_changed_files: true
+
+  build-net10:
+    if: "!contains(github.event.head_commit.message, 'skip-ci')"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore -p:TargetFrameworks=net10.0
+
+      - name: Build .NET 10
+        run: dotnet build --framework net10.0 --configuration Release --no-restore -p:TargetFrameworks=net10.0
+
+      - name: Test .NET 10
+        working-directory: ./tests
+        run: dotnet test --framework net10.0 --verbosity normal -p:TargetFrameworks=net10.0
           
   run:
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     environment: azure_prod
-    needs: build
+    needs: [build, build-net10]
 
     steps:
       - name: Checkout
@@ -121,13 +147,13 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Run Integration Tests
-        run: dotnet run -- nsg -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet ${{ runner.debug == '1' && '--no-color --debug' || '' }} >> $GITHUB_STEP_SUMMARY
+        run: dotnet run --framework net11.0 -- nsg -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet ${{ runner.debug == '1' && '--no-color --debug' || '' }} >> $GITHUB_STEP_SUMMARY
 
       - name: Run Advisor Integration Test
-        run: dotnet run -- advisor -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet ${{ runner.debug == '1' && '--no-color --debug' || '' }} >> $GITHUB_STEP_SUMMARY
+        run: dotnet run --framework net11.0 -- advisor -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet ${{ runner.debug == '1' && '--no-color --debug' || '' }} >> $GITHUB_STEP_SUMMARY
 
       - name: Run Route Tables Integration Test
-        run: dotnet run -- route-tables -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet ${{ runner.debug == '1' && '--no-color --debug' || '' }} >> $GITHUB_STEP_SUMMARY
+        run: dotnet run --framework net11.0 -- route-tables -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet ${{ runner.debug == '1' && '--no-color --debug' || '' }} >> $GITHUB_STEP_SUMMARY
 
       - name: Run Firewall Integration Test
-        run: dotnet run -- firewall -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet ${{ runner.debug == '1' && '--no-color --debug' || '' }} >> $GITHUB_STEP_SUMMARY
+        run: dotnet run --framework net11.0 -- firewall -s ${{ secrets.AZURE_SUBSCRIPTION_ID }} -o markdown --quiet ${{ runner.debug == '1' && '--no-color --debug' || '' }} >> $GITHUB_STEP_SUMMARY

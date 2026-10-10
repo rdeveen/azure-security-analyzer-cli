@@ -2,7 +2,7 @@
   <PropertyGroup>
     <RootNamespace>AzureSecurityAnalyzer</RootNamespace>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -28,13 +28,15 @@
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.21.0" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-rc.1.26425.128" />
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="11.0.0-rc.1.26425.128" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-rc.1.26425.128" Condition="'$(TargetFramework)' == 'net11.0'" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.12" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="11.0.0-rc.1.26425.128" Condition="'$(TargetFramework)' == 'net11.0'" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="11.0.100-rc.1.26425.128" PrivateAssets="all" />
     <PackageReference Include="Polly" Version="8.8.0" />
     <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
     <PackageReference Include="Spectre.Console" Version="0.57.2" />
-    <PackageReference Include="Spectre.Console.Cli" Version="0.55.0" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.57.2" />
     <PackageReference Include="Spectre.Console.Json" Version="0.57.2" />
   </ItemGroup>
 

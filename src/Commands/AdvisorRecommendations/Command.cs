@@ -10,15 +10,15 @@ public class Command(IAzureResourceRetriever azureResourceRetriever) : AsyncComm
     private readonly IAzureResourceRetriever azureResourceRetriever = azureResourceRetriever;
     private readonly Dictionary<OutputFormat, BaseOutputFormatter> outputFormatters = OutputFormatterFactory.Create();
 
-    protected override ValidationResult Validate(CommandContext context, Settings settings)
+    public override ValidationResult Validate(CommandContext context, Settings settings)
     {
         var result = CommandHelpers.ValidateAndResolveSubscription(
             settings.Subscription, isSubscriptionBased: true, s => settings.Subscription = s);
 
         return result.Successful ? base.Validate(context, settings) : result;
     }
-
-    protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
+    
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         CommandHelpers.PrintVersionIfDebug(settings.Debug);
 
