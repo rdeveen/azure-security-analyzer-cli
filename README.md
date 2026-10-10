@@ -27,7 +27,6 @@ To make the call to the Azure Management API, you do need to run this from a use
 
 | Command                        | Description                                                                       |
 | ------------------------------ | --------------------------------------------------------------------------------- |
-| `az-security-analyzer regions` | List all Azure regions and their availability.          |
 | `az-security-analyzer nsg`     | Analyze Network Security Groups (NSGs) for security issues and misconfigurations. |
 | `az-security-analyzer firewall` | Analyze Azure Firewall policies for attachment, rule, and IDPS issues. |
 | `az-security-analyzer route-tables` | Analyze route tables for default-route and attachment issues. |
