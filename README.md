@@ -1,6 +1,6 @@
 # Azure Security Analyzer CLI (`azure-security-analyzer-cli`)
 
-The Azure Security Analyzer CLI is a tool for analyzing the security posture of various Azure resources, including Network Security Groups (NSGs), Azure Firewall policies, route tables, and Azure Advisor recommendations. The CLI helps identify potential security issues and misconfigurations, providing actionable insights to improve the overall security of your Azure environment. It goes beyond the basic security checks by offering in-depth analysis and recommendations tailored to your specific Azure setup.
+The Azure Security Analyzer CLI is a tool for analyzing the security posture of various Azure resources, including Network Security Groups (NSGs), Azure Firewall policies, route tables, virtual network peerings, and Azure Advisor recommendations. The CLI helps identify potential security issues and misconfigurations, providing actionable insights to improve the overall security of your Azure environment. It goes beyond the basic security checks by offering in-depth analysis and recommendations tailored to your specific Azure setup.
 
 ## Installation
 
@@ -30,6 +30,7 @@ To make the call to the Azure Management API, you do need to run this from a use
 | `az-security-analyzer nsg`     | Analyze Network Security Groups (NSGs) for security issues and misconfigurations. |
 | `az-security-analyzer firewall` | Analyze Azure Firewall policies for attachment, rule, and IDPS issues. |
 | `az-security-analyzer route-tables` | Analyze route tables for default-route and attachment issues. |
+| `az-security-analyzer vnet-peerings` | Analyze virtual network peerings for connectivity and traffic settings. |
 | `az-security-analyzer advisor` | Analyze Azure Advisor recommendations for security-related issues.                |
 | `az-security-analyzer --help`  | Show help information for the Azure Security Analyzer CLI.                        |
 
@@ -58,6 +59,9 @@ az-security-analyzer advisor
 
 # Run the security-analyzer with route table analysis
 az-security-analyzer route-tables
+
+# Run the security-analyzer with virtual network peering analysis
+az-security-analyzer vnet-peerings
 ```
 
 ## Upgrading
