@@ -21,8 +21,6 @@ To make the call to the Azure Management API, you do need to run this from a use
 
 ## Usage
 
-## Commands
-
 ### The following commands are available
 
 | Command                        | Description                                                                       |
