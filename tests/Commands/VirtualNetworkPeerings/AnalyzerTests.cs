@@ -62,6 +62,21 @@ public class AnalyzerTests
             result.IssueDescription == "This peering does not have a matching peering in the remote virtual network.");
     }
 
+    [Fact]
+    public async Task Analyze_WithCrossSubscriptionRemoteVirtualNetworkOutsideRetrievedScope_ReportsVerificationUnavailable()
+    {
+        var virtualNetworks = new[]
+        {
+            CreateVirtualNetwork("vnet-a",
+                CreatePeering("vnet-a-to-b", GetVirtualNetworkId("vnet-b", "sub2")))
+        };
+
+        var results = await Analyzer.Analyze(virtualNetworks);
+
+        results.Should().ContainSingle(result =>
+            result.IssueDescription == "The remote virtual network is outside the retrieved subscription scope, so the matching peering could not be verified.");
+    }
+
     private static VirtualNetwork CreateVirtualNetwork(string name, params VirtualNetworkPeering[] peerings) => new(
         Id: GetVirtualNetworkId(name),
         Name: name,
@@ -86,5 +101,8 @@ public class AnalyzerTests
             RemoteVirtualNetwork: new ResourceReference(remoteVirtualNetworkId)));
 
     private static string GetVirtualNetworkId(string name) =>
-        $"/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/{name}";
+        GetVirtualNetworkId(name, "sub1");
+
+    private static string GetVirtualNetworkId(string name, string subscriptionId) =>
+        $"/subscriptions/{subscriptionId}/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/{name}";
 }

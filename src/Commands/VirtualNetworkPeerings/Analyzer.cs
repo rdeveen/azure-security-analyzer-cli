@@ -24,15 +24,25 @@ public class Analyzer
                     SeverityLevel.High));
             }
 
+            var remoteVirtualNetworkId = peering.Properties.RemoteVirtualNetwork?.Id;
             if (!peerings.Any(reversePeering =>
                     MatchesValue(reversePeering.Peering.Properties.RemoteVirtualNetwork?.Id, virtualNetwork.Id) &&
-                    MatchesValue(reversePeering.VirtualNetwork.Id, peering.Properties.RemoteVirtualNetwork?.Id)))
+                    MatchesValue(reversePeering.VirtualNetwork.Id, remoteVirtualNetworkId)))
             {
+                var sourceSubscriptionId = GetSubscriptionId(virtualNetwork.Id);
+                var remoteSubscriptionId = GetSubscriptionId(remoteVirtualNetworkId);
+                var remoteIsOutsideRetrievedScope = !string.IsNullOrWhiteSpace(remoteVirtualNetworkId) &&
+                    (sourceSubscriptionId is null || remoteSubscriptionId is null ||
+                     !MatchesValue(sourceSubscriptionId, remoteSubscriptionId)) &&
+                    !virtualNetworks.Any(network => MatchesValue(network.Id, remoteVirtualNetworkId));
+
                 results.Add(new AnomalyDetectionResult(
                     virtualNetwork,
                     peering,
-                    "This peering does not have a matching peering in the remote virtual network.",
-                    SeverityLevel.High));
+                    remoteIsOutsideRetrievedScope
+                        ? "The remote virtual network is outside the retrieved subscription scope, so the matching peering could not be verified."
+                        : "This peering does not have a matching peering in the remote virtual network.",
+                    remoteIsOutsideRetrievedScope ? SeverityLevel.Medium : SeverityLevel.High));
             }
 
             if (peering.Properties.AllowVirtualNetworkAccess != true)
@@ -61,6 +71,25 @@ public class Analyzer
         !string.IsNullOrWhiteSpace(value) &&
         !string.IsNullOrWhiteSpace(expectedValue) &&
         string.Equals(value, expectedValue, StringComparison.OrdinalIgnoreCase);
+
+    private static string? GetSubscriptionId(string? resourceId)
+    {
+        var segments = resourceId?.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments is null)
+        {
+            return null;
+        }
+
+        for (var index = 0; index < segments.Length - 1; index++)
+        {
+            if (string.Equals(segments[index], "subscriptions", StringComparison.OrdinalIgnoreCase))
+            {
+                return segments[index + 1];
+            }
+        }
+
+        return null;
+    }
 }
 
 public record AnomalyDetectionResult(
