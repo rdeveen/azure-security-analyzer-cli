@@ -110,12 +110,11 @@ resource vnetPeeringTestNetworkAccessRemote 'Microsoft.Network/virtualNetworks@2
     }
   }
 }
- 
 
 @description('Disallow virtual network access from source to remote virtual network peering')
 resource vnetPeeringTestDisallowVirtualNetworkAccess 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
   parent: vnetPeeringTestNetworkAccessSource
-  name: 'disallow-virtual-network-access'
+  name: 'disallow-virtual-network-access-source-to-remote'
   properties: {
     remoteVirtualNetwork: {
       id: vnetPeeringTestNetworkAccessRemote.id
@@ -128,7 +127,7 @@ resource vnetPeeringTestDisallowVirtualNetworkAccess 'Microsoft.Network/virtualN
 @description('Disallow virtual network access from remote to source virtual network peering')
 resource vnetPeeringTestDisallowVirtualNetworkAccessRemote 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
   parent: vnetPeeringTestNetworkAccessRemote
-  name: 'disallow-virtual-network-access'
+  name: 'disallow-virtual-network-access-remote-to-source'
   properties: {
     remoteVirtualNetwork: {
       id: vnetPeeringTestNetworkAccessSource.id
