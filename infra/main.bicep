@@ -571,3 +571,39 @@ resource vnetPeeringTestRemoteToSource 'Microsoft.Network/virtualNetworks/virtua
     allowForwardedTraffic: true
   }
 }
+
+resource vnetPeeringTestAsymmetricSource 'Microsoft.Network/virtualNetworks@2025-07-01' = {
+  name: 'vnet-peering-test-asymmetric-source'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.3.0.0/16'
+      ]
+    }
+  }
+}
+
+resource vnetPeeringTestAsymmetricRemote 'Microsoft.Network/virtualNetworks@2025-07-01' = {
+  name: 'vnet-peering-test-asymmetric-remote'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.4.0.0/16'
+      ]
+    }
+  }
+}
+
+resource vnetPeeringTestAsymmetricSourceToRemote 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
+  parent: vnetPeeringTestAsymmetricSource
+  name: 'asymmetric-source-to-remote'
+  properties: {
+    remoteVirtualNetwork: {
+      id: vnetPeeringTestAsymmetricRemote.id
+    }
+    allowVirtualNetworkAccess: true
+    allowForwardedTraffic: true
+  }
+}
