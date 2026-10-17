@@ -7,7 +7,6 @@ Azure Security Analyzer CLI
 ```bash
 az login
 azure-security-analyzer --help
-azure-security-analyzer vnet-peerings
 ```
 
 ### More info
