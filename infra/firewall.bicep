@@ -1,7 +1,7 @@
 param location string
 
 @description('This Firewall Policy is intentionally unattached, has intrusion detection disabled, and has no rule collection groups.')
-resource firewallPolicyIdpsOffNoRules 'Microsoft.Network/firewallPolicies@2024-05-01' = {
+resource firewallPolicyIdpsOffNoRules 'Microsoft.Network/firewallPolicies@2026-01-01' = {
   name: 'fp-idps-off-no-rules'
   location: location
   properties: {
@@ -16,7 +16,7 @@ resource firewallPolicyIdpsOffNoRules 'Microsoft.Network/firewallPolicies@2024-0
 }
 
 @description('This Firewall Policy is intentionally unattached and contains an allow-all network rule for analyzer validation without deploying an Azure Firewall.')
-resource firewallPolicyAllowAll 'Microsoft.Network/firewallPolicies@2024-05-01' = {
+resource firewallPolicyAllowAll 'Microsoft.Network/firewallPolicies@2026-01-01' = {
   name: 'fp-alert-allow-all'
   location: location
   properties: {
@@ -30,7 +30,7 @@ resource firewallPolicyAllowAll 'Microsoft.Network/firewallPolicies@2024-05-01' 
   }
 }
 
-resource firewallPolicyAllowAllRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2024-05-01' = {
+resource firewallPolicyAllowAllRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2026-01-01' = {
   name: 'DefaultNetworkRuleCollectionGroup'
   parent: firewallPolicyAllowAll
   properties: {
@@ -67,7 +67,7 @@ resource firewallPolicyAllowAllRuleCollectionGroup 'Microsoft.Network/firewallPo
 }
 
 @description('This Firewall Policy is intentionally unattached and contains a scoped HTTPS rule so policy analysis can distinguish it from allow-all configurations.')
-resource firewallPolicyScopedRule 'Microsoft.Network/firewallPolicies@2024-05-01' = {
+resource firewallPolicyScopedRule 'Microsoft.Network/firewallPolicies@2026-01-01' = {
   name: 'fp-deny-scoped-rule'
   location: location
   properties: {
@@ -81,7 +81,7 @@ resource firewallPolicyScopedRule 'Microsoft.Network/firewallPolicies@2024-05-01
   }
 }
 
-resource firewallPolicyScopedRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2024-05-01' = {
+resource firewallPolicyScopedRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2026-01-01' = {
   name: 'DefaultNetworkRuleCollectionGroup'
   parent: firewallPolicyScopedRule
   properties: {
@@ -117,7 +117,7 @@ resource firewallPolicyScopedRuleCollectionGroup 'Microsoft.Network/firewallPoli
   }
 }
 
-resource vnetSecurityRouteTableFirewallTest 'Microsoft.Network/virtualNetworks@2025-07-01' = {
+resource vnetSecurityRouteTableFirewallTest 'Microsoft.Network/virtualNetworks@2026-01-01' = {
   name: 'vnet-security-route-table-firewall-test'
   location: location
   properties: {
@@ -130,7 +130,7 @@ resource vnetSecurityRouteTableFirewallTest 'Microsoft.Network/virtualNetworks@2
 }
 
 @description('This route table has a default route to a firewall and is associated with a subnet.')
-resource routeTableFirewall 'Microsoft.Network/routeTables@2025-07-01' = {
+resource routeTableFirewall 'Microsoft.Network/routeTables@2026-01-01' = {
   name: 'rt-firewall'
   location: location
   properties: {
@@ -149,7 +149,7 @@ resource routeTableFirewall 'Microsoft.Network/routeTables@2025-07-01' = {
 }
 
 @description('This route table has a default route directly to the internet and is not associated with a subnet.')
-resource routeTableInternet 'Microsoft.Network/routeTables@2025-07-01' = {
+resource routeTableInternet 'Microsoft.Network/routeTables@2026-01-01' = {
   name: 'rt-internet'
   location: location
   properties: {
@@ -167,7 +167,7 @@ resource routeTableInternet 'Microsoft.Network/routeTables@2025-07-01' = {
 }
 
 @description('This route table has no default route to a firewall and is associated with a subnet.')
-resource routeTableMissingFirewall 'Microsoft.Network/routeTables@2025-07-01' = {
+resource routeTableMissingFirewall 'Microsoft.Network/routeTables@2026-01-01' = {
   name: 'rt-missing-firewall'
   location: location
   properties: {
@@ -184,7 +184,7 @@ resource routeTableMissingFirewall 'Microsoft.Network/routeTables@2025-07-01' = 
   }
 }
 
-resource subnetRouteTableFirewall 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = {
+resource subnetRouteTableFirewall 'Microsoft.Network/virtualNetworks/subnets@2026-01-01' = {
   parent: vnetSecurityRouteTableFirewallTest
   name: 'subnet-rt-firewall'
   properties: {
@@ -195,7 +195,7 @@ resource subnetRouteTableFirewall 'Microsoft.Network/virtualNetworks/subnets@202
   }
 }
 
-resource subnetRouteTableMissingFirewall 'Microsoft.Network/virtualNetworks/subnets@2025-07-01' = {
+resource subnetRouteTableMissingFirewall 'Microsoft.Network/virtualNetworks/subnets@2026-01-01' = {
   parent: vnetSecurityRouteTableFirewallTest
   name: 'subnet-rt-missing-firewall'
   properties: {

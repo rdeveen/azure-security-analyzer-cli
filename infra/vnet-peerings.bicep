@@ -1,6 +1,6 @@
 param location string
 
-resource vnetPeeringTestSource 'Microsoft.Network/virtualNetworks@2025-07-01' = {
+resource vnetPeeringTestSource 'Microsoft.Network/virtualNetworks@2026-01-01' = {
   name: 'vnet-peering-test-source'
   location: location
   properties: {
@@ -12,7 +12,7 @@ resource vnetPeeringTestSource 'Microsoft.Network/virtualNetworks@2025-07-01' = 
   }
 }
 
-resource vnetPeeringTestRemote 'Microsoft.Network/virtualNetworks@2025-07-01' = {
+resource vnetPeeringTestRemote 'Microsoft.Network/virtualNetworks@2026-01-01' = {
   name: 'vnet-peering-test-remote'
   location: location
   properties: {
@@ -50,7 +50,7 @@ resource vnetPeeringTestRemoteToSource 'Microsoft.Network/virtualNetworks/virtua
   }
 }
 
-resource vnetPeeringTestAsymmetricSource 'Microsoft.Network/virtualNetworks@2025-07-01' = {
+resource vnetPeeringTestAsymmetricSource 'Microsoft.Network/virtualNetworks@2026-01-01' = {
   name: 'vnet-peering-test-asymmetric-source'
   location: location
   properties: {
@@ -62,7 +62,7 @@ resource vnetPeeringTestAsymmetricSource 'Microsoft.Network/virtualNetworks@2025
   }
 }
 
-resource vnetPeeringTestAsymmetricRemote 'Microsoft.Network/virtualNetworks@2025-07-01' = {
+resource vnetPeeringTestAsymmetricRemote 'Microsoft.Network/virtualNetworks@2026-01-01' = {
   name: 'vnet-peering-test-asymmetric-remote'
   location: location
   properties: {
@@ -87,7 +87,7 @@ resource vnetPeeringTestAsymmetricSourceToRemote 'Microsoft.Network/virtualNetwo
   }
 }
 
-resource vnetPeeringTestNetworkAccessSource 'Microsoft.Network/virtualNetworks@2025-07-01' = {
+resource vnetPeeringTestNetworkAccessSource 'Microsoft.Network/virtualNetworks@2026-01-01' = {
   name: 'vnet-peering-test-network-access-source'
   location: location
   properties: {
@@ -99,7 +99,7 @@ resource vnetPeeringTestNetworkAccessSource 'Microsoft.Network/virtualNetworks@2
   }
 }
 
-resource vnetPeeringTestNetworkAccessRemote 'Microsoft.Network/virtualNetworks@2025-07-01' = {
+resource vnetPeeringTestNetworkAccessRemote 'Microsoft.Network/virtualNetworks@2026-01-01' = {
   name: 'vnet-peering-test-network-access-remote'
   location: location
   properties: {
