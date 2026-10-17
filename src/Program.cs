@@ -51,6 +51,11 @@ app.Configure(config =>
 
     config.AddExample(["route-tables"]);
 
+    config.AddCommand<AzureSecurityAnalyzer.Commands.VirtualNetworkPeerings.Command>("vnet-peerings")
+       .WithDescription("Validate virtual network peerings in the subscription.");
+
+    config.AddExample(["vnet-peerings"]);
+
     config.AddCommand<AzureSecurityAnalyzer.Commands.AdvisorRecommendations.Command>("advisor")
        .WithDescription("Get the Azure Advisor recommendations for the subscription.");
 
