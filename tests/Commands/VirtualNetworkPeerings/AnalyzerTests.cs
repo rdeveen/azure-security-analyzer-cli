@@ -12,9 +12,9 @@ public class AnalyzerTests
         var virtualNetworks = new[]
         {
             CreateVirtualNetwork("vnet-a",
-                CreatePeering("vnet-a-to-b", "/virtualNetworks/vnet-b")),
+                CreatePeering("vnet-a-to-b", GetVirtualNetworkId("vnet-b"))),
             CreateVirtualNetwork("vnet-b",
-                CreatePeering("vnet-b-to-a", "/virtualNetworks/vnet-a"))
+                CreatePeering("vnet-b-to-a", GetVirtualNetworkId("vnet-a")))
         };
 
         var results = await Analyzer.Analyze(virtualNetworks);
@@ -30,7 +30,7 @@ public class AnalyzerTests
             CreateVirtualNetwork("vnet-a",
                 CreatePeering(
                     "vnet-a-to-b",
-                    "/virtualNetworks/vnet-b",
+                    GetVirtualNetworkId("vnet-b"),
                     peeringState: "Initiated",
                     allowVirtualNetworkAccess: false,
                     allowForwardedTraffic: false))
@@ -53,7 +53,7 @@ public class AnalyzerTests
         var virtualNetworks = new[]
         {
             CreateVirtualNetwork("vnet-a",
-                CreatePeering("vnet-a-to-b", "/virtualNetworks/vnet-b"))
+                CreatePeering("vnet-a-to-b", GetVirtualNetworkId("vnet-b")))
         };
 
         var results = await Analyzer.Analyze(virtualNetworks);
@@ -63,7 +63,7 @@ public class AnalyzerTests
     }
 
     private static VirtualNetwork CreateVirtualNetwork(string name, params VirtualNetworkPeering[] peerings) => new(
-        Id: $"/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/{name}",
+        Id: GetVirtualNetworkId(name),
         Name: name,
         Type: "Microsoft.Network/virtualNetworks",
         Location: "westeurope",
@@ -84,4 +84,7 @@ public class AnalyzerTests
             AllowVirtualNetworkAccess: allowVirtualNetworkAccess,
             AllowForwardedTraffic: allowForwardedTraffic,
             RemoteVirtualNetwork: new ResourceReference(remoteVirtualNetworkId)));
+
+    private static string GetVirtualNetworkId(string name) =>
+        $"/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/{name}";
 }
