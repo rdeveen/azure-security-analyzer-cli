@@ -19,6 +19,9 @@ public class CommandTests
     public CommandTests()
     {
         mockAzureResourceRetriever.SetupAllProperties();
+        mockAzureResourceRetriever
+            .Setup(retriever => retriever.RetrieveVirtualNetwork(It.IsAny<bool>(), It.IsAny<string>()))
+            .ReturnsAsync((VirtualNetwork?)null);
         command = new Command(mockAzureResourceRetriever.Object);
     }
 
@@ -67,6 +70,64 @@ public class CommandTests
         result.Should().Be(0);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_RetrievesRemoteVirtualNetworkForCrossSubscriptionPeering()
+    {
+        var subscriptionId = Guid.NewGuid();
+        var selectedVirtualNetwork = CreateVirtualNetwork(
+            "/subscriptions/sub2/resourceGroups/rg2/providers/Microsoft.Network/virtualNetworks/vnet2");
+        var remoteVirtualNetwork = new VirtualNetwork(
+            Id: "/subscriptions/sub2/resourceGroups/rg2/providers/Microsoft.Network/virtualNetworks/vnet2",
+            Name: "vnet2",
+            Type: "Microsoft.Network/virtualNetworks",
+            Location: "westeurope",
+            Tags: null,
+            Properties: new VirtualNetworkProperties("Succeeded",
+            [
+                new VirtualNetworkPeering(
+                    Id: "/subscriptions/sub2/resourceGroups/rg2/providers/Microsoft.Network/virtualNetworks/vnet2/virtualNetworkPeerings/peer2",
+                    Name: "peer2",
+                    Type: "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                    Properties: new VirtualNetworkPeeringProperties(
+                        PeeringState: "Connected",
+                        AllowVirtualNetworkAccess: true,
+                        AllowForwardedTraffic: true,
+                        RemoteVirtualNetwork: new ResourceReference("/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1")))
+            ]));
+        mockAzureResourceRetriever
+            .Setup(retriever => retriever.RetrieveVirtualNetworks(It.IsAny<bool>(), subscriptionId))
+            .ReturnsAsync([selectedVirtualNetwork]);
+        mockAzureResourceRetriever
+            .Setup(retriever => retriever.RetrieveVirtualNetwork(
+                It.IsAny<bool>(), remoteVirtualNetwork.Id))
+            .ReturnsAsync(remoteVirtualNetwork);
+        var settings = new Settings { Quiet = true, Subscription = subscriptionId, Output = OutputFormat.Json };
+
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
+
+        result.Should().Be(0);
+        mockAzureResourceRetriever.Verify(retriever => retriever.RetrieveVirtualNetwork(
+            It.IsAny<bool>(), remoteVirtualNetwork.Id), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenRemoteVirtualNetworkCannotBeRead_ContinuesAnalysis()
+    {
+        var subscriptionId = Guid.NewGuid();
+        mockAzureResourceRetriever
+            .Setup(retriever => retriever.RetrieveVirtualNetworks(It.IsAny<bool>(), subscriptionId))
+            .ReturnsAsync([CreateVirtualNetwork()]);
+        mockAzureResourceRetriever
+            .Setup(retriever => retriever.RetrieveVirtualNetwork(
+                It.IsAny<bool>(), It.IsAny<string>()))
+            .ThrowsAsync(new HttpRequestException());
+        var settings = new Settings { Quiet = true, Subscription = subscriptionId, Output = OutputFormat.Json };
+
+        var result = await CaptureAnsiConsoleOutput(() => ExecuteAsync(settings));
+
+        result.Should().Be(0);
+    }
+
     private Task<int> ExecuteAsync(Settings settings) =>
         ((ICommand<Settings>)command).ExecuteAsync(CreateCommandContext(), settings, CancellationToken.None);
 
@@ -92,7 +153,8 @@ public class CommandTests
         }
     }
 
-    private static VirtualNetwork CreateVirtualNetwork() => new(
+    private static VirtualNetwork CreateVirtualNetwork(string remoteVirtualNetworkId =
+        "/subscriptions/sub1/resourceGroups/rg2/providers/Microsoft.Network/virtualNetworks/vnet2") => new(
         Id: "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1",
         Name: "vnet1",
         Type: "Microsoft.Network/virtualNetworks",
@@ -108,7 +170,7 @@ public class CommandTests
                     PeeringState: "Connected",
                     AllowVirtualNetworkAccess: true,
                     AllowForwardedTraffic: true,
-                    RemoteVirtualNetwork: new ResourceReference("/subscriptions/sub1/resourceGroups/rg2/providers/Microsoft.Network/virtualNetworks/vnet2")))
+                    RemoteVirtualNetwork: new ResourceReference(remoteVirtualNetworkId)))
         ]));
 
     private static CommandContext CreateCommandContext() =>

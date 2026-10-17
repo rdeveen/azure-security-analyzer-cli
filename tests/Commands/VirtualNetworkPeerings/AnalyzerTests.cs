@@ -74,11 +74,36 @@ public class AnalyzerTests
         var results = await Analyzer.Analyze(virtualNetworks);
 
         results.Should().ContainSingle(result =>
-            result.IssueDescription == "The remote virtual network is outside the retrieved subscription scope, so the matching peering could not be verified.");
+            result.IssueDescription == "The remote virtual network could not be retrieved, so the matching peering could not be verified.");
     }
 
-    private static VirtualNetwork CreateVirtualNetwork(string name, params VirtualNetworkPeering[] peerings) => new(
-        Id: GetVirtualNetworkId(name),
+    [Fact]
+    public async Task Analyze_WithHealthyCrossSubscriptionPeeringAndRetrievedRemoteVirtualNetwork_ReturnsNoAnomalies()
+    {
+        var selectedSubscriptionVirtualNetworks = new[]
+        {
+            CreateVirtualNetwork("vnet-a",
+                CreatePeering("vnet-a-to-b", GetVirtualNetworkId("vnet-b", "sub2")))
+        };
+        var remoteVirtualNetworks = new[]
+        {
+            CreateVirtualNetwork("vnet-b", "sub2",
+                CreatePeering("vnet-b-to-a", GetVirtualNetworkId("vnet-a")))
+        };
+
+        var results = await Analyzer.Analyze(selectedSubscriptionVirtualNetworks, remoteVirtualNetworks);
+
+        results.Should().BeEmpty();
+    }
+
+    private static VirtualNetwork CreateVirtualNetwork(string name, params VirtualNetworkPeering[] peerings) =>
+        CreateVirtualNetwork(name, "sub1", peerings);
+
+    private static VirtualNetwork CreateVirtualNetwork(
+        string name,
+        string subscriptionId,
+        params VirtualNetworkPeering[] peerings) => new(
+        Id: GetVirtualNetworkId(name, subscriptionId),
         Name: name,
         Type: "Microsoft.Network/virtualNetworks",
         Location: "westeurope",

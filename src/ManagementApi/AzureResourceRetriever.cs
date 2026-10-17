@@ -22,6 +22,7 @@ public interface IAzureResourceRetriever
     Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<RouteTable>> RetrieveRouteTables(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<VirtualNetwork>> RetrieveVirtualNetworks(bool includeDebugOutput, Guid subscriptionId);
+    Task<VirtualNetwork?> RetrieveVirtualNetwork(bool includeDebugOutput, string virtualNetworkId);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudSecurityPolicies(bool includeDebugOutput, Guid subscriptionId);
@@ -253,6 +254,12 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         }
 
         return virtualNetworks;
+    }
+
+    public async Task<VirtualNetwork?> RetrieveVirtualNetwork(bool includeDebugOutput, string virtualNetworkId)
+    {
+        var uri = new Uri($"{virtualNetworkId}?api-version=2024-05-01", UriKind.Relative);
+        return await ExecuteTypedCallToManagementApi<VirtualNetwork>(includeDebugOutput, null, uri);
     }
 
     public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope)

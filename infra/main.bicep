@@ -523,3 +523,51 @@ resource firewallPolicyScopedRuleCollectionGroup 'Microsoft.Network/firewallPoli
     ]
   }
 }
+
+resource vnetPeeringTestSource 'Microsoft.Network/virtualNetworks@2025-07-01' = {
+  name: 'vnet-peering-test-source'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.1.0.0/16'
+      ]
+    }
+  }
+}
+
+resource vnetPeeringTestRemote 'Microsoft.Network/virtualNetworks@2025-07-01' = {
+  name: 'vnet-peering-test-remote'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.2.0.0/16'
+      ]
+    }
+  }
+}
+
+resource vnetPeeringTestSourceToRemote 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
+  parent: vnetPeeringTestSource
+  name: 'source-to-remote'
+  properties: {
+    remoteVirtualNetwork: {
+      id: vnetPeeringTestRemote.id
+    }
+    allowVirtualNetworkAccess: true
+    allowForwardedTraffic: true
+  }
+}
+
+resource vnetPeeringTestRemoteToSource 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
+  parent: vnetPeeringTestRemote
+  name: 'remote-to-source'
+  properties: {
+    remoteVirtualNetwork: {
+      id: vnetPeeringTestSource.id
+    }
+    allowVirtualNetworkAccess: true
+    allowForwardedTraffic: true
+  }
+}

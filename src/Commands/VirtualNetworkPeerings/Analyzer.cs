@@ -5,15 +5,21 @@ namespace AzureSecurityAnalyzer.Commands.VirtualNetworkPeerings;
 public class Analyzer
 {
     public static Task<IReadOnlyCollection<AnomalyDetectionResult>> Analyze(
-        IReadOnlyCollection<VirtualNetwork> virtualNetworks)
+        IReadOnlyCollection<VirtualNetwork> virtualNetworks,
+        IReadOnlyCollection<VirtualNetwork>? remoteVirtualNetworks = null,
+        IReadOnlyCollection<string>? unavailableRemoteVirtualNetworkIds = null)
     {
         var results = new List<AnomalyDetectionResult>();
-        var peerings = virtualNetworks
+        var allVirtualNetworks = virtualNetworks.Concat(remoteVirtualNetworks ?? []).ToArray();
+        var peerings = allVirtualNetworks
             .SelectMany(virtualNetwork => (virtualNetwork.Properties.VirtualNetworkPeerings ?? [])
                 .Select(peering => (VirtualNetwork: virtualNetwork, Peering: peering)))
             .ToArray();
+        var selectedPeerings = virtualNetworks
+            .SelectMany(virtualNetwork => (virtualNetwork.Properties.VirtualNetworkPeerings ?? [])
+                .Select(peering => (VirtualNetwork: virtualNetwork, Peering: peering)));
 
-        foreach (var (virtualNetwork, peering) in peerings)
+        foreach (var (virtualNetwork, peering) in selectedPeerings)
         {
             if (!MatchesValue(peering.Properties.PeeringState, "Connected"))
             {
@@ -31,18 +37,22 @@ public class Analyzer
             {
                 var sourceSubscriptionId = GetSubscriptionId(virtualNetwork.Id);
                 var remoteSubscriptionId = GetSubscriptionId(remoteVirtualNetworkId);
-                var remoteIsOutsideRetrievedScope = !string.IsNullOrWhiteSpace(remoteVirtualNetworkId) &&
-                    (sourceSubscriptionId is null || remoteSubscriptionId is null ||
-                     !MatchesValue(sourceSubscriptionId, remoteSubscriptionId)) &&
-                    !virtualNetworks.Any(network => MatchesValue(network.Id, remoteVirtualNetworkId));
+                var remoteWasNotRetrieved = !allVirtualNetworks.Any(network =>
+                    MatchesValue(network.Id, remoteVirtualNetworkId));
+                var remoteIsUnavailable = !string.IsNullOrWhiteSpace(remoteVirtualNetworkId) &&
+                    remoteWasNotRetrieved &&
+                    ((unavailableRemoteVirtualNetworkIds ?? []).Any(id =>
+                         MatchesValue(id, remoteVirtualNetworkId)) ||
+                     sourceSubscriptionId is null || remoteSubscriptionId is null ||
+                     !MatchesValue(sourceSubscriptionId, remoteSubscriptionId));
 
                 results.Add(new AnomalyDetectionResult(
                     virtualNetwork,
                     peering,
-                    remoteIsOutsideRetrievedScope
-                        ? "The remote virtual network is outside the retrieved subscription scope, so the matching peering could not be verified."
+                    remoteIsUnavailable
+                        ? "The remote virtual network could not be retrieved, so the matching peering could not be verified."
                         : "This peering does not have a matching peering in the remote virtual network.",
-                    remoteIsOutsideRetrievedScope ? SeverityLevel.Medium : SeverityLevel.High));
+                    remoteIsUnavailable ? SeverityLevel.Medium : SeverityLevel.High));
             }
 
             if (peering.Properties.AllowVirtualNetworkAccess != true)
