@@ -548,6 +548,7 @@ resource vnetPeeringTestRemote 'Microsoft.Network/virtualNetworks@2025-07-01' = 
   }
 }
 
+@description('Two-way virtual network peering between source and remote virtual networks')
 resource vnetPeeringTestSourceToRemote 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
   parent: vnetPeeringTestSource
   name: 'source-to-remote'
@@ -560,6 +561,7 @@ resource vnetPeeringTestSourceToRemote 'Microsoft.Network/virtualNetworks/virtua
   }
 }
 
+@description('Two-way virtual network peering between remote and source virtual networks')
 resource vnetPeeringTestRemoteToSource 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
   parent: vnetPeeringTestRemote
   name: 'remote-to-source'
@@ -596,6 +598,7 @@ resource vnetPeeringTestAsymmetricRemote 'Microsoft.Network/virtualNetworks@2025
   }
 }
 
+@description('One-way virtual network peering from source to remote virtual network')
 resource vnetPeeringTestAsymmetricSourceToRemote 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
   parent: vnetPeeringTestAsymmetricSource
   name: 'asymmetric-source-to-remote'
@@ -604,6 +607,32 @@ resource vnetPeeringTestAsymmetricSourceToRemote 'Microsoft.Network/virtualNetwo
       id: vnetPeeringTestAsymmetricRemote.id
     }
     allowVirtualNetworkAccess: true
+    allowForwardedTraffic: true
+  }
+}
+
+@description('Disallow virtual network access from source to remote virtual network peering')
+resource vnetPeeringTestDisallowVirtualNetworkAccess 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
+  parent: vnetPeeringTestSource
+  name: 'disallow-virtual-network-access'
+  properties: {
+    remoteVirtualNetwork: {
+      id: vnetPeeringTestRemote.id
+    }
+    allowVirtualNetworkAccess: false
+    allowForwardedTraffic: true
+  }
+}
+
+@description('Disallow virtual network access from remote to source virtual network peering')
+resource vnetPeeringTestDisallowVirtualNetworkAccessRemote 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
+  parent: vnetPeeringTestRemote
+  name: 'disallow-virtual-network-access'
+  properties: {
+    remoteVirtualNetwork: {
+      id: vnetPeeringTestSource.id
+    }
+    allowVirtualNetworkAccess: false
     allowForwardedTraffic: true
   }
 }
