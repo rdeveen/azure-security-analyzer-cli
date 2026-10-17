@@ -35,6 +35,7 @@ public class ProgramTests
         standardOutput.Should().Contain("nsg");
         standardOutput.Should().Contain("firewall");
         standardOutput.Should().Contain("route-tables");
+        standardOutput.Should().Contain("vnet-peerings");
         standardOutput.Should().Contain("advisor");
     }
 }

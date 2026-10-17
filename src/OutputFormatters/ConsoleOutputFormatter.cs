@@ -248,6 +248,54 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteVirtualNetworkPeerings(Commands.VirtualNetworkPeerings.Settings settings, IReadOnlyCollection<VirtualNetwork> virtualNetworks, IReadOnlyCollection<Commands.VirtualNetworkPeerings.AnomalyDetectionResult> analysisResults)
+    {
+        var peerings = virtualNetworks
+            .SelectMany(virtualNetwork => (virtualNetwork.Properties.VirtualNetworkPeerings ?? [])
+                .Select(peering => (VirtualNetwork: virtualNetwork, Peering: peering)))
+            .ToList();
+
+        if (peerings.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[yellow]No virtual network peerings found.[/]");
+
+            return Task.CompletedTask;
+        }
+
+        var table = new Table();
+        table.Border(TableBorder.Rounded);
+        table.AddColumn("Virtual Network");
+        table.AddColumn("Peering");
+        table.AddColumn("Remote Virtual Network");
+        table.AddColumn("State");
+        table.AddColumn("VNet Access");
+        table.AddColumn("Forwarded Traffic");
+        table.AddColumn("Issues");
+
+        foreach (var (virtualNetwork, peering) in peerings.OrderBy(item => item.VirtualNetwork.Name).ThenBy(item => item.Peering.Name))
+        {
+            var peeringIssues = analysisResults
+                .Where(result => result.Peering.Id == peering.Id)
+                .ToList();
+            var issueSummary = peeringIssues.Count == 0
+                ? "[green](none)[/]"
+                : string.Join("\n", peeringIssues.Select(result => $"{result.Severity}: {Markup.Escape(result.IssueDescription)}"));
+
+            table.AddRow(
+                new Markup(Markup.Escape(virtualNetwork.Name)),
+                new Markup(Markup.Escape(peering.Name)),
+                new Markup(Markup.Escape(peering.Properties.RemoteVirtualNetwork?.Id ?? "(unknown)")),
+                new Markup(Markup.Escape(peering.Properties.PeeringState ?? "(unknown)")),
+                new Markup(peering.Properties.AllowVirtualNetworkAccess == true ? "[green]True[/]" : "[red]False[/]"),
+                new Markup(peering.Properties.AllowForwardedTraffic == true ? "[green]True[/]" : "[red]False[/]"),
+                new Markup(issueSummary));
+        }
+
+        AnsiConsole.Write(table);
+
+        return Task.CompletedTask;
+    }
+
     public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
     {
         if (recommendations.Count == 0)

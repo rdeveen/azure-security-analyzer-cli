@@ -10,5 +10,7 @@ public abstract class BaseOutputFormatter
 
     public abstract Task WriteRouteTables(Commands.RouteTables.Settings settings, IReadOnlyCollection<RouteTable> routeTables, IReadOnlyCollection<Commands.RouteTables.AnomalyDetectionResult> analysisResults);
 
+    public abstract Task WriteVirtualNetworkPeerings(Commands.VirtualNetworkPeerings.Settings settings, IReadOnlyCollection<VirtualNetwork> virtualNetworks, IReadOnlyCollection<Commands.VirtualNetworkPeerings.AnomalyDetectionResult> analysisResults);
+
     public abstract Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations);
 }

@@ -141,6 +141,41 @@ public class MarkdownOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteVirtualNetworkPeerings(Commands.VirtualNetworkPeerings.Settings settings, IReadOnlyCollection<VirtualNetwork> virtualNetworks, IReadOnlyCollection<Commands.VirtualNetworkPeerings.AnomalyDetectionResult> analysisResults)
+    {
+        var peerings = virtualNetworks
+            .SelectMany(virtualNetwork => (virtualNetwork.Properties.VirtualNetworkPeerings ?? [])
+                .Select(peering => (VirtualNetwork: virtualNetwork, Peering: peering)))
+            .ToList();
+
+        if (peerings.Count == 0)
+        {
+            Console.WriteLine("No virtual network peerings found.");
+
+            return Task.CompletedTask;
+        }
+
+        Console.WriteLine("# Virtual Network Peerings");
+        Console.WriteLine();
+        Console.WriteLine("|Virtual Network|Peering|Remote Virtual Network|State|VNet Access|Forwarded Traffic|Issues|");
+        Console.WriteLine("|---|---|---|---|---|---|---|");
+
+        foreach (var (virtualNetwork, peering) in peerings.OrderBy(item => item.VirtualNetwork.Name).ThenBy(item => item.Peering.Name))
+        {
+            var issues = analysisResults
+                .Where(result => result.Peering.Id == peering.Id)
+                .Select(result => $"- {EscapeMarkdownCell(result.IssueDescription)} ({result.Severity})");
+            var issueSummary = string.Join("<br>", issues);
+
+            Console.WriteLine(
+                $"|{EscapeMarkdownCell(virtualNetwork.Name)}|{EscapeMarkdownCell(peering.Name)}|" +
+                $"{EscapeMarkdownCell(peering.Properties.RemoteVirtualNetwork?.Id ?? "(unknown)")}|{EscapeMarkdownCell(peering.Properties.PeeringState ?? "(unknown)")}|{peering.Properties.AllowVirtualNetworkAccess}|" +
+                $"{peering.Properties.AllowForwardedTraffic}|{(string.IsNullOrEmpty(issueSummary) ? "(none)" : issueSummary)}|");
+        }
+
+        return Task.CompletedTask;
+    }
+
     public override Task WriteAdvisorRecommendations(Commands.AdvisorRecommendations.Settings settings, IReadOnlyCollection<AdvisorRecommendation> recommendations)
     {
         if (recommendations.Count == 0)

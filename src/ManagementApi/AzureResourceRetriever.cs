@@ -21,6 +21,7 @@ public interface IAzureResourceRetriever
     Task<IReadOnlyCollection<FirewallPolicyRuleCollectionGroup>> RetrieveFirewallPolicyRuleCollectionGroups(bool includeDebugOutput, Guid subscriptionId, string resourceGroupName, string firewallPolicyName);
     Task<IReadOnlyCollection<NetworkSecurityGroup>> RetrieveNetworkSecurityGroups(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<RouteTable>> RetrieveRouteTables(bool includeDebugOutput, Guid subscriptionId);
+    Task<IReadOnlyCollection<VirtualNetwork>> RetrieveVirtualNetworks(bool includeDebugOutput, Guid subscriptionId);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope);
     Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveDefenderForCloudSecurityPolicies(bool includeDebugOutput, Guid subscriptionId);
@@ -216,6 +217,42 @@ public class AzureResourceRetriever(HttpClient httpClient) : IAzureResourceRetri
         }
 
         return routeTables;
+    }
+
+    public async Task<IReadOnlyCollection<VirtualNetwork>> RetrieveVirtualNetworks(bool includeDebugOutput, Guid subscriptionId)
+    {
+        var virtualNetworks = new List<VirtualNetwork>();
+
+        var uri = new Uri(
+            $"/subscriptions/{subscriptionId}/providers/Microsoft.Network/virtualNetworks?api-version=2024-05-01",
+            UriKind.Relative);
+
+        while (true)
+        {
+            var content = await ExecuteTypedCallToManagementApi<VirtualNetworkListResult>(includeDebugOutput, null, uri);
+
+            if (content?.Value is { Length: > 0 })
+            {
+                virtualNetworks.AddRange(content.Value);
+            }
+
+            if (string.IsNullOrEmpty(content?.NextLink))
+            {
+                break;
+            }
+
+            uri = new Uri(content.NextLink, UriKind.Absolute);
+        }
+
+        if (includeDebugOutput)
+        {
+            var json = JsonSerializer.Serialize(virtualNetworks, jsonSerializerOptions);
+            AnsiConsole.WriteLine($"Retrieved {virtualNetworks.Count} virtual networks:");
+            AnsiConsole.Write(new JsonText(json));
+            AnsiConsole.WriteLine();
+        }
+
+        return virtualNetworks;
     }
 
     public async Task<IReadOnlyCollection<AdvisorRecommendation>> RetrieveAdvisorRecommendations(bool includeDebugOutput, Guid subscriptionId, Scope scope)
@@ -652,4 +689,37 @@ public record RouteProperties(
     string? AddressPrefix,
     string NextHopType,
     string? NextHopIpAddress
+);
+
+public record VirtualNetworkListResult(
+    VirtualNetwork[] Value,
+    string? NextLink
+);
+
+public record VirtualNetwork(
+    string Id,
+    string Name,
+    string Type,
+    string Location,
+    Dictionary<string, string>? Tags,
+    VirtualNetworkProperties Properties
+);
+
+public record VirtualNetworkProperties(
+    string? ProvisioningState,
+    VirtualNetworkPeering[]? VirtualNetworkPeerings
+);
+
+public record VirtualNetworkPeering(
+    string Id,
+    string Name,
+    string? Type,
+    VirtualNetworkPeeringProperties Properties
+);
+
+public record VirtualNetworkPeeringProperties(
+    string? PeeringState,
+    bool? AllowVirtualNetworkAccess,
+    bool? AllowForwardedTraffic,
+    ResourceReference? RemoteVirtualNetwork
 );

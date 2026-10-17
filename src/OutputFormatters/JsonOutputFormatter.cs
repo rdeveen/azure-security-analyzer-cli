@@ -92,6 +92,26 @@ public class JsonOutputFormatter : BaseOutputFormatter
         return Task.CompletedTask;
     }
 
+    public override Task WriteVirtualNetworkPeerings(Commands.VirtualNetworkPeerings.Settings settings, IReadOnlyCollection<VirtualNetwork> virtualNetworks, IReadOnlyCollection<Commands.VirtualNetworkPeerings.AnomalyDetectionResult> analysisResults)
+    {
+        var output = virtualNetworks.Select(virtualNetwork => new
+        {
+            VirtualNetwork = virtualNetwork,
+            Peerings = (virtualNetwork.Properties.VirtualNetworkPeerings ?? []).Select(peering => new
+            {
+                Peering = peering,
+                Anomalies = analysisResults
+                    .Where(result => result.Peering.Id == peering.Id)
+                    .Select(result => new { result.IssueDescription, result.Severity })
+                    .ToList()
+            })
+        }).ToList();
+
+        WriteJson(settings, output);
+
+        return Task.CompletedTask;
+    }
+
     private static void WriteJson(Commands.ICommandSettings settings, object items)
     {
         var options = new JsonSerializerOptions { WriteIndented = true };
