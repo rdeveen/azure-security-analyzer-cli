@@ -25,12 +25,12 @@ To make the call to the Azure Management API, you do need to run this from a use
 
 | Command                        | Description                                                                       |
 | ------------------------------ | --------------------------------------------------------------------------------- |
-| `az-security-analyzer nsg`     | Analyze Network Security Groups (NSGs) for security issues and misconfigurations. |
-| `az-security-analyzer firewall` | Analyze Azure Firewall policies for attachment, rule, and IDPS issues. |
-| `az-security-analyzer route-tables` | Analyze route tables for default-route and attachment issues. |
-| `az-security-analyzer vnet-peerings` | Analyze virtual network peerings for connectivity and traffic settings. |
-| `az-security-analyzer advisor` | Analyze Azure Advisor recommendations for security-related issues.                |
-| `az-security-analyzer --help`  | Show help information for the Azure Security Analyzer CLI.                        |
+| `azure-security-analyzer nsg`     | Analyze Network Security Groups (NSGs) for security issues and misconfigurations. |
+| `azure-security-analyzer firewall` | Analyze Azure Firewall policies for attachment, rule, and IDPS issues. |
+| `azure-security-analyzer route-tables` | Analyze route tables for default-route and attachment issues. |
+| `azure-security-analyzer vnet-peerings` | Analyze virtual network peerings for connectivity and traffic settings. |
+| `azure-security-analyzer advisor` | Analyze Azure Advisor recommendations for security-related issues.                |
+| `azure-security-analyzer --help`  | Show help information for the Azure Security Analyzer CLI.                        |
 
 ## Global flags
 
@@ -47,19 +47,19 @@ These flags are available on every command:
 
 ```bash
 # Run the security-analyzer with NSG analysis
-az-security-analyzer nsg
+azure-security-analyzer nsg
 
 # Run the security-analyzer with Azure Firewall policy analysis
-az-security-analyzer firewall
+azure-security-analyzer firewall
 
 # Run the security-analyzer with Advisor recommendations
-az-security-analyzer advisor
+azure-security-analyzer advisor
 
 # Run the security-analyzer with route table analysis
-az-security-analyzer route-tables
+azure-security-analyzer route-tables
 
 # Run the security-analyzer with virtual network peering analysis
-az-security-analyzer vnet-peerings
+azure-security-analyzer vnet-peerings
 ```
 
 ## Upgrading
